@@ -29,15 +29,14 @@ void Communications_Process()
 		if (Serial.available() > 0)
 		{
 			char receivedByte = Serial.read();
+
 			switch (receivedByte)
 			{
-			case '\r':
+			case '\n':
 				char output[255];
 				sprintf(output, "command received: %s", rxBuffer);
 				Serial.print(output);
 				rxIndex = 0;
-				break;
-			case '\n':
 				break;
 			default:
 				rxBuffer[rxIndex] = receivedByte;
@@ -46,5 +45,4 @@ void Communications_Process()
 			rxIndex++;
 		}
 	}
-}
 }
