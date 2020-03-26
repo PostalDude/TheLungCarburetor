@@ -32,10 +32,10 @@ void Communications_Process()
 
 			switch (receivedByte)
 			{
-			case '\n':
+			case '|':
 				char output[255];
 				sprintf(output, "command received: %s", rxBuffer);
-				Serial.print(output);
+				Serial.println(output);
 				rxIndex = 0;
 				break;
 			default:
