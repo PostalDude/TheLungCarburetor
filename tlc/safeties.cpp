@@ -38,12 +38,12 @@ void Safeties_Process()
     {
         return;
     }
-    
+
     // If any safety issue, set bCritical in global safeties structure
     if (gSafeties.bEnabled)
     {
         float fPressureDelta = gDataModel.fPressure_mmH2O[0] - gDataModel.fPressure_mmH2O[1];
-        
+
         if (gSafeties.bConfigurationInvalid                                         ||
             gSafeties.bCritical                                                     ||
             gDataModel.fPressure_mmH2O[0] >= gConfiguration.fMaxPressureLimit_mmH2O ||

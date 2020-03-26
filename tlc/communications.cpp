@@ -7,8 +7,8 @@ bool Communications_Init()
 {
     gSerialConnected = false;
     Serial.begin(kSerialBaudRate);
-    
-    return true;    
+
+    return true;
 }
 
 void Communications_Process()

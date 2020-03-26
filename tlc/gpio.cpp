@@ -1,21 +1,24 @@
 #include "gpio.h"
 #include "datamodel.h"
+#include "control.h"
 
 // Set ports direction
 bool GPIO_Init()
 {
-    // Configure pins from defs.h       
+    // Configure pins from defs.h
     pinMode(PIN_PRESSURE0, INPUT);
     pinMode(PIN_PRESSURE1, INPUT);
-	pinMode(PIN_BATTERY,   INPUT);
-    
+    pinMode(PIN_BATTERY,   INPUT);
+
+    exhaleValveServo.attach(PIN_SERVO_EXHALE);
+
     // Set led output pin
     pinMode(PIN_OUT_LED, OUTPUT);
     digitalWrite(PIN_OUT_LED, HIGH);
 
     // Set pin mode for buzzer
-    pinMode(PIN_OUT_PWM_BUZZER, OUTPUT); 
-    
+    pinMode(PIN_OUT_PWM_BUZZER, OUTPUT);
+
     // Set pin mode for pressure pump
     pinMode(PIN_OUT_PWM_PUMP, OUTPUT);
     analogWrite(PIN_OUT_PWM_PUMP, 0);
