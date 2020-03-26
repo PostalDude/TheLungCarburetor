@@ -10,6 +10,7 @@ struct tDataModel
     eControlMode    nControlMode;           // Control mode of the pump
 	eTriggerMode	nTriggerMode;			// Respiration trigger mode
     uint8_t         nRawPressure[2];        // Raw read pressure from sensor
+	float			fBatteryLevel;			// Battery voltage level
         
     float           fRequestPressure_mmH2O; // Requested pressure set-point
     uint8_t         nRespirationCurveIndex; // Current index in the respiration curve

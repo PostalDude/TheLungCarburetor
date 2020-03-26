@@ -7,6 +7,7 @@ bool GPIO_Init()
     // Configure pins from defs.h       
     pinMode(PIN_PRESSURE0, INPUT);
     pinMode(PIN_PRESSURE1, INPUT);
+	pinMode(PIN_BATTERY,   INPUT);
     
     // Set led output pin
     pinMode(PIN_OUT_LED, OUTPUT);

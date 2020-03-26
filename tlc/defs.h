@@ -50,15 +50,6 @@ enum eTriggerMode
 	kTriggerMode_Count
 };
 
-
-// Pressure Limit on the manometer, read by reed switches
-enum ePressureLimit
-{
-    kPressureLimit_High = (1<<0),
-    kPressureLimit_Mid  = (1<<1),
-    kPressureLimit_Low  = (1<<2),
-};
-
 const float kMPX5010_MaxPressure_mmH2O          = 1019.78f;
 const float kMPX5010_Accuracy                   = 0.5f;
 const float kMPX5010_Sensitivity_mV_mmH2O       = 4.413f;
@@ -73,7 +64,6 @@ const float kMPX5010_Sensitivity_mV_mmH2O       = 4.413f;
 
 #define PIN_PRESSURE0           A0      // Pressure readings from MPX pressure sensor
 #define PIN_PRESSURE1           A1      // Pressure readings from MPX redundant pressure sensor
-
-
+#define PIN_BATTERY				A2		// Battery voltage 
 
 #endif // TLC_DEFS_H
