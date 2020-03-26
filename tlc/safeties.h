@@ -5,9 +5,9 @@
 
 struct tSafeties
 {
-	bool	bEnabled;				// Safeties are enabled
-	bool	bCritical;				// Critical safety, details in this structure
-	bool	bConfigurationInvalid;	// Configuration is invalid
+    bool    bEnabled;               // Safeties are enabled
+    bool    bCritical;              // Critical safety, details in this structure
+    bool    bConfigurationInvalid;  // Configuration is invalid
 };
 extern tSafeties gSafeties;
 

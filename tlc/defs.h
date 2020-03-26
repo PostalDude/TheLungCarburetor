@@ -1,55 +1,69 @@
 #ifndef TLC_DEFS_H
 #define TLC_DEFS_H
 
-// This file contain values shared with an external control on the serial port
+// Force error check at compile time for constants
+#define HXCOMPILATIONASSERT(name, x) typedef char name[x ? 1 : -1]
 
+
+// This file contain values shared with an external control on the serial port
 enum eConsts
 {
-	kSerialBaudRate 		= 115200,	// Baud rate of serial port
-	kPeriodControl		= 5,		// Period to call control loop in milliseconds
-	kPeriodCommunications	= 2,		// Period to call communications loop in milliseconds
-	kPeriodSensors			= 10,		// Period to call sensors loop in milliseconds
-	kPeriodWarmup			= 1000,		// Period to warmup the system in milliseconds	
+    kSerialBaudRate             = 115200,   // Baud rate of serial port
+    kPeriodControl              = 5,        // Period to call control loop in milliseconds
+    kPeriodCommunications       = 2,        // Period to call communications loop in milliseconds
+    kPeriodSensors              = 5,        // Period to call sensors loop in milliseconds
+    kPeriodWarmup               = 1000,     // Period to warmup the system in milliseconds  
+    kEEPROM_Version             = 1,        // EEPROM version must match this version for compatibility
+    kMaxRespirationCurveCount   = 64,       // Maximum respiration curve index count
 };
+
+HXCOMPILATIONASSERT(assertSensorPeriodCheck, (kPeriodSensors >= 1));
 
 // State of the system
 enum eState
 {
-	kState_Idle = 0,
-	kState_Init,
-	kState_Warmup,
-	kState_Process,
-	kState_Error,
-	
-	kState_Count
+    kState_Idle = 0,
+    kState_Init,
+    kState_Warmup,
+    kState_Process,
+    kState_Error,
+    
+    kState_Count
+};
+
+// Pump Servo Control Mode
+enum eControlMode
+{
+    kControlMode_PID = 0,       // Pump is controlled by pressure feedback using a PID
+    kControlMode_AssistedPID,   // Pump is controlled by pressure feedback using an assisted patient respiration PID
+    kControlMode_OpenLoop,      // OpenLoop control is not based on pressure feedback
+    kControlMode_FeedForward,   // Feedforward is used to send requested pump pwm values from master controller
+    
+    kControlMode_Count
 };
 
 // Pressure Limit on the manometer, read by reed switches
 enum ePressureLimit
 {
-	kPressureLimit_High	= (1<<0),
-	kPressureLimit_Mid 	= (1<<1),
-	kPressureLimit_Low 	= (1<<2),
+    kPressureLimit_High = (1<<0),
+    kPressureLimit_Mid  = (1<<1),
+    kPressureLimit_Low  = (1<<2),
 };
 
-const float kMPX53DP_MaxPressureKPA 			= 50.0f;
-const float kMPX53DP_SensitivityVoltPerKPA 		= 1.2f;
-const float kMPX53DP_OpAmpGain 					= 50.0f;
-const float kMPX53DP_kPA_cm						= 1.01f;
+const float kMPX5010_MaxPressure_mmH2O          = 1019.78f;
+const float kMPX5010_Accuracy                   = 0.5f;
+const float kMPX5010_Sensitivity_mV_mmH2O       = 4.413f;
 
-#define PIN_SERIAL_RX			0		// Serial port RX
-#define PIN_SERIAL_TX			1		// Serial port TX
+#define PIN_SERIAL_RX           0       // Serial port RX
+#define PIN_SERIAL_TX           1       // Serial port TX
 
-#define	PIN_REEDSWITCH_LOW		2		// Low manometer reed switch
-#define	PIN_REEDSWITCH_MID		3		// Mid manometer reed switch
-#define	PIN_REEDSWITCH_HIGH		4		// High manometer reed switch
+#define PIN_OUT_LED             7       // LED debug output
 
-#define PIN_OUT_LED				7		// LED debug output
+#define PIN_OUT_PWM_PUMP        5       // Ambu pump Cam PWM output
+#define PIN_OUT_PWM_BUZZER      9       // Buzzer PWM signal output
 
-#define PIN_OUT_PWM_PUMP		5		// Ambu pump Cam PWM output
-#define PIN_OUT_PWM_BUZZER		9		// Buzzer PWM signal output
-
-#define PIN_PRESSURE			A0		// Pressure readings from MPX53DP amplified through INA333 opamp
+#define PIN_PRESSURE0           A0      // Pressure readings from MPX pressure sensor
+#define PIN_PRESSURE1           A1      // Pressure readings from MPX redundant pressure sensor
 
 
 
