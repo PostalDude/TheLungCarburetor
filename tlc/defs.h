@@ -35,12 +35,21 @@ enum eState
 enum eControlMode
 {
     kControlMode_PID = 0,       // Pump is controlled by pressure feedback using a PID
-    kControlMode_AssistedPID,   // Pump is controlled by pressure feedback using an assisted patient respiration PID
-    kControlMode_OpenLoop,      // OpenLoop control is not based on pressure feedback
     kControlMode_FeedForward,   // Feedforward is used to send requested pump pwm values from master controller
     
     kControlMode_Count
 };
+
+// Respiration trigger mode
+enum eTriggerMode
+{
+	kTriggerMode_Timed = 0,				// Machine Respiration timed, ignore patient respiration
+	kTriggerMode_Patient,				// Machine Respiration triggered by patient respiration
+	kTriggerMode_PatientSemiAutomatic,	// Machine Respiration triggered by patient respiration, or timed when patient is not triggering after a timeout
+	
+	kTriggerMode_Count
+};
+
 
 // Pressure Limit on the manometer, read by reed switches
 enum ePressureLimit

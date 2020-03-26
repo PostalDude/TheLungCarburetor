@@ -8,6 +8,7 @@ struct tDataModel
 {
     eState          nState;                 // System state
     eControlMode    nControlMode;           // Control mode of the pump
+	eTriggerMode	nTriggerMode;			// Respiration trigger mode
     uint8_t         nRawPressure[2];        // Raw read pressure from sensor
         
     float           fRequestPressure_mmH2O; // Requested pressure set-point

@@ -8,16 +8,6 @@ bool Control_Init()
     return true;
 }
 
-// Control using a PID and use feedback from patient own respiration
-void Control_AssistedPID()
-{
-}
-
-// Control without using the pressure feedback
-void Control_OpenLoop()
-{
-}
-
 // Control using a PID with pressure feedback
 void Control_PID()
 {
@@ -49,8 +39,49 @@ void Control_PID()
     gDataModel.nPWMPump = (uint8_t)(gDataModel.fPI * gConfiguration.fControlTransfer);
 }
 
-static void ComputeRespirationSetPoint()
+static bool ComputeRespirationSetPoint()
 {
+    bool timeTriggerEnable      = false;
+    bool patientTriggerEnable   = false;
+    switch (gDataModel.nTriggerMode)
+    {
+    case kTriggerMode_Timed:
+        timeTriggerEnable   = true;
+        break;
+        
+    case kTriggerMode_Patient:
+        // If not in respiration cycle
+        if (gDataModel.nRespirationCurveIndex >= gDataModel.nRespirationCurveCount)
+        {
+            // If patient triggers respiration
+            if (gDataModel.fPressure_mmH2O[0] > gConfiguration.fPatientTrigger_mmH2O)
+            {
+                patientTriggerEnable = true;
+            }
+        }
+        break;
+    
+    case kTriggerMode_PatientSemiAutomatic:
+        timeTriggerEnable = true;
+        // If not in respiration cycle
+        if (gDataModel.nRespirationCurveIndex >= gDataModel.nRespirationCurveCount)
+        {
+            // If patient triggers respiration
+            if (gDataModel.fPressure_mmH2O[0] > gConfiguration.fPatientTrigger_mmH2O)
+            {
+                patientTriggerEnable = true;
+            }
+        }
+        break;
+    
+    default:
+        // Invalid setting
+        gSafeties.bConfigurationInvalid = true;
+        gDataModel.nPWMPump             = 0;
+        return false;
+    };
+
+    
     // Check for overflow of allowed maximum curve setpoint count
     if (gDataModel.nRespirationCurveIndex >= kMaxRespirationCurveCount)
     {
@@ -60,10 +91,11 @@ static void ComputeRespirationSetPoint()
     }
         
     // Finished a cycle, then we wait for the next respiration
-    if (gDataModel.nRespirationCurveIndex >= gDataModel.nRespirationCurveCount)
+    if ((timeTriggerEnable || patientTriggerEnable) && gDataModel.nRespirationCurveIndex >= gDataModel.nRespirationCurveCount)
     {
         // Relaxation time, compared to respiration per minute (to milliseconds)
-        if (gDataModel.nRespirationPerMinute != 0 && (millis() - gDataModel.nTickRespiration) >= (60000 / gDataModel.nRespirationPerMinute))
+        if ((timeTriggerEnable && (gDataModel.nRespirationPerMinute != 0 && (millis() - gDataModel.nTickRespiration) >= (60000 / gDataModel.nRespirationPerMinute))) ||
+            patientTriggerEnable)
         {
             // Start a new respiration cycle
             gDataModel.nRespirationCurveIndex   = 0;
@@ -81,6 +113,8 @@ static void ComputeRespirationSetPoint()
             ++gDataModel.nRespirationCurveIndex;
         }
     }
+    
+    return true;
 }
 
 void Control_Process()
@@ -95,18 +129,10 @@ void Control_Process()
     switch (gDataModel.nControlMode)
     {
     case kControlMode_PID:
-        ComputeRespirationSetPoint();
-        Control_PID();
-        break;  
-        
-    case kControlMode_AssistedPID:
-        ComputeRespirationSetPoint();
-        Control_AssistedPID();
-        break;
-        
-    case kControlMode_OpenLoop:     
-        ComputeRespirationSetPoint();
-        Control_OpenLoop();
+        if (ComputeRespirationSetPoint())
+        {
+            Control_PID();
+        }
         break;
         
     case kControlMode_FeedForward:

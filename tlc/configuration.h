@@ -17,6 +17,7 @@ struct tConfiguration
     float       fILimit;                    // Integral error limit
     float       fPILimit;                   // Proportional+Integral error limit
     float       fControlTransfer;           // Control transfer from adjusted errors to pwm
+	float		fPatientTrigger_mmH2O;		// Patient triggers respiration when this value is reached (In TriggerMode Patient or semi automatic)
     uint32_t    nCRC;                       // Configuration CRC check
 };
 extern tConfiguration gConfiguration;
