@@ -35,6 +35,12 @@ void Control_PID()
     }
     
     // Note: Derivative not used, not necessary for now.
+	
+	//*** Validate how we manage too much pressure
+	if (gDataModel.fPI < 0)
+	{
+		gDataModel.fPI = 0;
+	}
     
     gDataModel.nPWMPump = (uint8_t)(gDataModel.fPI * gConfiguration.fControlTransfer);
 }
