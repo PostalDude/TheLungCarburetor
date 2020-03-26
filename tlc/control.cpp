@@ -63,7 +63,7 @@ static void ComputeRespirationSetPoint()
     if (gDataModel.nRespirationCurveIndex >= gDataModel.nRespirationCurveCount)
     {
         // Relaxation time, compared to respiration per minute (to milliseconds)
-        if ((millis() - gDataModel.nTickRespiration) >= (gDataModel.nRespirationPerMinute * 60000))
+        if (gDataModel.nRespirationPerMinute != 0 && (millis() - gDataModel.nTickRespiration) >= (60000 / gDataModel.nRespirationPerMinute))
         {
             // Start a new respiration cycle
             gDataModel.nRespirationCurveIndex   = 0;
