@@ -110,6 +110,7 @@ static bool ComputeRespirationSetPoint()
         
         if ((millis() - gDataModel.nTickSetPoint) >= gDataModel.nRespirationCurve_Tick[gDataModel.nTickSetPoint])
         {
+			gDataModel.nTickSetPoint        = millis();
             ++gDataModel.nRespirationCurveIndex;
         }
     }
