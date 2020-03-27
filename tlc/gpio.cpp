@@ -10,18 +10,36 @@ bool GPIO_Init()
     pinMode(PIN_PRESSURE1, INPUT);
     pinMode(PIN_BATTERY,   INPUT);
 
-    exhaleValveServo.attach(PIN_SERVO_EXHALE);
-
-    // Set led output pin
-    pinMode(PIN_OUT_LED, OUTPUT);
-    digitalWrite(PIN_OUT_LED, HIGH);
+    exhaleValveServo.attach(PIN_OUT_SERVO_EXHALE);
 
     // Set pin mode for buzzer
-    pinMode(PIN_OUT_PWM_BUZZER, OUTPUT);
+    pinMode(PIN_OUT_BUZZER, OUTPUT);
+    digitalWrite(PIN_OUT_BUZZER, LOW);
+
+    pinMode(PIN_OUT_EMERGENCY_RELAY, OUTPUT);
+    digitalWrite(PIN_OUT_BUZZER, HIGH);
 
     // Set pin mode for pressure pump
-    pinMode(PIN_OUT_PWM_PUMP, OUTPUT);
-    analogWrite(PIN_OUT_PWM_PUMP, 0);
+    pinMode(PIN_OUT_PUMP1_DIRA, OUTPUT);
+    digitalWrite(PIN_OUT_PUMP1_DIRA, LOW);
+
+    pinMode(PIN_OUT_PUMP1_DIRB, OUTPUT);
+    digitalWrite(PIN_OUT_PUMP1_DIRB, LOW);
+
+    pinMode(PIN_OUT_PUMP2_DIRA, OUTPUT);
+    digitalWrite(PIN_OUT_PUMP2_DIRA, LOW);
+
+    pinMode(PIN_OUT_PUMP2_DIRB, OUTPUT);
+    digitalWrite(PIN_OUT_PUMP2_DIRB, LOW);
+
+    pinMode(PIN_OUT_PUMP1_PWM, OUTPUT);
+    analogWrite(PIN_OUT_PUMP1_PWM, 0);
+
+    pinMode(PIN_OUT_PUMP2_PWM, OUTPUT);
+    analogWrite(PIN_OUT_PUMP2_PWM, 0);
+
+    pinMode(PIN_OUT_PUMPS_ENABLE, OUTPUT);
+    digitalWrite(PIN_OUT_PUMPS_ENABLE, HIGH);
 
     return true;
 }

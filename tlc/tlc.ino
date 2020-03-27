@@ -17,8 +17,7 @@ void setup()
     GPIO_Init();    
 
     DataModel_Init();
-    gDataModel.nState = kState_Init;
-    
+        
     Communications_Init();
 
     Sensors_Init();
@@ -38,10 +37,10 @@ void setup()
         
     gDataModel.nState   = kState_Warmup;
     gStartTick          = millis();
-    
-    tone(PIN_OUT_PWM_BUZZER, 500); 
+
+	digitalWrite(PIN_OUT_BUZZER, HIGH);
     delay(100);
-    tone(PIN_OUT_PWM_BUZZER, 300); 
+    digitalWrite(PIN_OUT_BUZZER, LOW);
     delay(100);
 }
 
@@ -61,7 +60,7 @@ void loop()
         
     // Warmup system and sensors to have valid readings when going in process state
     case kState_Warmup:
-        tone(PIN_OUT_PWM_BUZZER, 0); 
+        digitalWrite(PIN_OUT_BUZZER, LOW);
         if ((millis() - gStartTick) >= kPeriodWarmup)
         {
             gDataModel.nState = kState_Process;
@@ -74,7 +73,7 @@ void loop()
         
     // Error state in case of safeties issues
     case kState_Error:
-        tone(PIN_OUT_PWM_BUZZER, 2000); 
+        digitalWrite(PIN_OUT_BUZZER, HIGH);
         
         // Stay in error until recovery
         if (gSafeties.bEnabled)

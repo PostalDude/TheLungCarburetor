@@ -22,8 +22,8 @@ HXCOMPILATIONASSERT(assertSensorPeriodCheck, (kPeriodSensors >= 1));
 // State of the system
 enum eState
 {
-    kState_Idle = 0,
-    kState_Init,
+    kState_Init = 0,
+    kState_Idle,
     kState_Warmup,
     kState_Process,
     kState_Error,
@@ -63,16 +63,27 @@ enum eTriggerMode
 const float kMPX5010_MaxPressure_mmH2O          = 1019.78f;
 const float kMPX5010_Accuracy                   = 0.5f;
 const float kMPX5010_Sensitivity_mV_mmH2O       = 4.413f;
+const float kBatteryLevelGain                   = 3.0f;
 
 #define PIN_SERIAL_RX           0       // Serial port RX
 #define PIN_SERIAL_TX           1       // Serial port TX
 
-#define PIN_SERVO_EXHALE        2       // Servo exhale valve
+#define PIN_OUT_SERVO_EXHALE    2       // Servo exhale valve
+#define PIN_OUT_EMERGENCY_RELAY 3       // Emergency call line relay
 
-#define PIN_OUT_LED             7       // LED debug output
+// Timer0 used by millis
+// Timer2 used by ServoTimer2
+// pins 3 and 11 analogWrite are disabled by the use of servotimer2 library
 
-#define PIN_OUT_PWM_PUMP        5       // Ambu pump Cam PWM output
-#define PIN_OUT_PWM_BUZZER      9       // Buzzer PWM signal output
+#define PIN_OUT_PUMP1_DIRA      4       // DIRA=0, DIRB=1 -> Clockwise
+#define PIN_OUT_PUMP1_DIRB      5       // DIRA=1, DIRB=0 -> AntiClockwise
+#define PIN_OUT_PUMPS_ENABLE    6       // Enabled when 1
+#define PIN_OUT_PUMP2_DIRA      7       // DIRA=0, DIRB=1 -> Clockwise
+#define PIN_OUT_PUMP2_DIRB      8       // DIRA=1, DIRB=0 -> AntiClockwise
+#define PIN_OUT_PUMP1_PWM       9       // Ambu pump Cam PWM output
+#define PIN_OUT_PUMP2_PWM       10      // Ambu pump Cam PWM output
+
+#define PIN_OUT_BUZZER          11      // Buzzer signal output
 
 #define PIN_PRESSURE0           A0      // Pressure readings from MPX pressure sensor
 #define PIN_PRESSURE1           A1      // Pressure readings from MPX redundant pressure sensor

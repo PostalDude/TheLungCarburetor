@@ -5,6 +5,8 @@ tDataModel gDataModel;
 bool DataModel_Init()
 {
     memset(&gDataModel, 0, sizeof(tDataModel));
+
+    gDataModel.nState = kState_Init;
     return true;
 }
 

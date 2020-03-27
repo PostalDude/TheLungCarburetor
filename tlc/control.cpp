@@ -3,10 +3,11 @@
 #include "configuration.h"
 #include "safeties.h"
 
-Servo exhaleValveServo;
+ServoTimer2 exhaleValveServo;
 
 bool Control_Init()
 {
+    gDataModel.nTickRespiration = millis(); // Respiration cycle start tick. Used to compute respiration per minutes
     exhaleValveServo.write(gConfiguration.nServoExhaleCloseAngle);
     return true;
 }
@@ -55,7 +56,7 @@ static bool CheckTrigger()
     switch (gDataModel.nTriggerMode)
     {
     case kTriggerMode_Timed:
-        trigger = (gDataModel.nRespirationPerMinute != 0 && (millis() - gDataModel.nTickRespiration) >= (60000 / gDataModel.nRespirationPerMinute));
+        trigger = ((gDataModel.nRespirationPerMinute > 0) && (millis() - gDataModel.nTickRespiration) >= (60000 / gDataModel.nRespirationPerMinute));
         break;
 
     case kTriggerMode_Patient:
@@ -72,7 +73,7 @@ static bool CheckTrigger()
         {
             trigger = true;
         }
-        trigger |= (gDataModel.nRespirationPerMinute != 0 && (millis() - gDataModel.nTickRespiration) >= (60000 / gDataModel.nRespirationPerMinute));
+        trigger |= ((gDataModel.nRespirationPerMinute > 0) && (millis() - gDataModel.nTickRespiration) >= (60000 / gDataModel.nRespirationPerMinute));
         break;
 
     default:
@@ -87,7 +88,7 @@ static bool CheckTrigger()
 
 static bool BeginRespirationCycle()
 {
-    gDataModel.nTickRespiration         = millis(); // Respiration cycle start tick. Used to compute respiration per minutes
+    gDataModel.nTickRespiration = millis(); // Respiration cycle start tick. Used to compute respiration per minutes
 
     return true;
 }
@@ -137,6 +138,8 @@ static bool Inhale()
         gDataModel.nTickSetPoint = millis();
         ++gDataModel.nCurveIndex;
     }
+
+    return false;
 }
 
 static bool StopInhaleCycle()
@@ -182,6 +185,8 @@ static bool Exhale()
         gDataModel.nTickSetPoint = millis();
         ++gDataModel.nCurveIndex;
     }
+
+    return false;
 }
 
 static bool StopExhaleCycle()
@@ -260,7 +265,7 @@ void Control_Process()
     {
         //*** Confirm default states
         exhaleValveServo.write(gConfiguration.nServoExhaleOpenAngle);
-        analogWrite(PIN_OUT_PWM_PUMP, 0);
+        analogWrite(PIN_OUT_PUMP1_PWM, 0);
         return;
     }
 
@@ -286,5 +291,13 @@ void Control_Process()
     };
 
     // Pump power to output
-    analogWrite(PIN_OUT_PWM_PUMP, gDataModel.nPWMPump);
+    digitalWrite(PIN_OUT_PUMPS_ENABLE, HIGH);
+    digitalWrite(PIN_OUT_PUMP1_DIRA, LOW);      // Pump1 rotate clockwise
+    digitalWrite(PIN_OUT_PUMP1_DIRB, HIGH);
+    analogWrite(PIN_OUT_PUMP1_PWM, gDataModel.nPWMPump);
+
+    // Pump 2 not in used in this version
+    digitalWrite(PIN_OUT_PUMP1_DIRA, LOW);
+    digitalWrite(PIN_OUT_PUMP1_DIRB, LOW);
+    analogWrite(PIN_OUT_PUMP2_PWM, 0);
 }

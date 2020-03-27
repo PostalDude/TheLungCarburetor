@@ -31,5 +31,5 @@ void Sensors_Process()
 
     gDataModel.fPressure_mmH2O[1] = mmH2O;
 
-    gDataModel.fBatteryLevel = (float)analogRead(PIN_BATTERY) * (1.0f/1024.0f);
+    gDataModel.fBatteryLevel = (float)analogRead(PIN_BATTERY) * (1.0f/1024.0f) * (kBatteryLevelGain * 5.0f);
 }
