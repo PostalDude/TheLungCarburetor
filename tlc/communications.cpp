@@ -3,6 +3,8 @@
 
 static bool     gSerialConnected    = false;
 static uint32_t gTickPublish        = 0;
+static uint8_t  gMsgTxID            = 0;
+static bool     gSendMsg            = false;
 
 struct tRxBuffer
 {
@@ -46,20 +48,51 @@ void Communications_Process()
     }
     else
     {
-        if ((millis() - gTickPublish) > kPeriodCommPublish)
+        if(gSendMsg)
         {
             //*** Needs profiling
-            Serial.print("PS1:"); Serial.println(gDataModel.fPressure_mmH2O[0], 2);
-            Serial.print("PS2:"); Serial.println(gDataModel.fPressure_mmH2O[1], 2);
-            Serial.print("RQP:"); Serial.println(gDataModel.fRequestPressure_mmH2O, 2);
-            Serial.print("BAT:"); Serial.println(gDataModel.fBatteryLevel, 2);
-            Serial.print("PMP:"); Serial.println(gDataModel.nPWMPump, DEC);
-            Serial.print("STA:"); Serial.println(gDataModel.nState, DEC);
-            Serial.print("CTL:"); Serial.println(gDataModel.nControlMode, DEC);
-            Serial.print("TRG:"); Serial.println(gDataModel.nTriggerMode, DEC);
-            Serial.print("CYC:"); Serial.println(gDataModel.nCycleState, DEC);
+            // Send only one message
+            switch(gMsgTxID)
+            {
+              case 0:
+                Serial.print("PS1:"); Serial.println(gDataModel.fPressure_mmH2O[0], 2);
+                break;
+              case 1:
+                Serial.print("PS2:"); Serial.println(gDataModel.fPressure_mmH2O[1], 2);
+                break;
+              case 2:
+                Serial.print("RQP:"); Serial.println(gDataModel.fRequestPressure_mmH2O, 2);
+                break;
+              case 3:
+                Serial.print("BAT:"); Serial.println(gDataModel.fBatteryLevel, 2);
+                break;
+              case 4:
+                Serial.print("PMP:"); Serial.println(gDataModel.nPWMPump, DEC);
+                break;
+              case 5:
+                Serial.print("STA:"); Serial.println(gDataModel.nState, DEC);
+                break;
+              case 6:
+                Serial.print("CTL:"); Serial.println(gDataModel.nControlMode, DEC);
+                break;
+              case 7:
+                  Serial.print("TRG:"); Serial.println(gDataModel.nTriggerMode, DEC);
+                  break;
+              case 8:
+                  Serial.print("CYC:"); Serial.println(gDataModel.nCycleState, DEC);
+                  break;
+              default:
+                  gSendMsg = false;
+            }
 
-            gTickPublish = millis();
+            // Select next message
+            gMsgTxID++;
+
+        } else if ((millis() - gTickPublish) > kPeriodCommPublish)
+        {
+          gSendMsg = true;
+          gMsgTxID = 0;
+          gTickPublish = millis();
         }
 
         // Process input string, wait for AT .... <cr><lf>
