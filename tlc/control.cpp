@@ -61,7 +61,7 @@ static bool CheckTrigger()
 
     case kTriggerMode_Patient:
         // If patient triggers respiration
-        if (gDataModel.fPressure_mmH2O[0] > gConfiguration.fPatientTrigger_mmH2O)
+        if (gDataModel.fPressure_mmH2O[0] < gConfiguration.fPatientTrigger_mmH2O)
         {
             trigger = true;
         }
@@ -69,7 +69,7 @@ static bool CheckTrigger()
 
     case kTriggerMode_PatientSemiAutomatic:
         // If patient triggers respiration or if time for next respiration cycle
-        if (gDataModel.fPressure_mmH2O[0] > gConfiguration.fPatientTrigger_mmH2O)
+        if (gDataModel.fPressure_mmH2O[0] < gConfiguration.fPatientTrigger_mmH2O)
         {
             trigger = true;
         }
@@ -243,8 +243,17 @@ static bool ComputeRespirationSetPoint()
             {
                 StopExhaleCycle();
                 EndRespirationCycle();
-                gDataModel.nCycleState = kCycleState_WaitTrigger;
+                gDataModel.nTickStabilization = millis();
+                gDataModel.nCycleState = kCycleState_Stabilization;
             }
+        }
+        break;
+
+    case kCycleState_Stabilization:
+        // Pressure Stabilization between cycles
+        if ((millis() - gDataModel.nTickStabilization) >= kPeriodStabilization)
+        {
+            gDataModel.nCycleState = kCycleState_WaitTrigger;
         }
         break;
 
@@ -273,8 +282,8 @@ void Control_Process()
     switch (gDataModel.nControlMode)
     {
     case kControlMode_PID:
-       	// It is assumed that the last pressure setpoint in the exhale curve is kept between respiration
-		if (ComputeRespirationSetPoint())
+        // It is assumed that the last pressure setpoint in the exhale curve is kept between respiration
+        if (ComputeRespirationSetPoint())
         {
             Control_PID();
         }
@@ -290,7 +299,7 @@ void Control_Process()
         gDataModel.nPWMPump             = 0;
         break;
     };
-	
+
 
     // Pump power to output
     digitalWrite(PIN_OUT_PUMPS_ENABLE, HIGH);

@@ -19,6 +19,7 @@ enum eConsts
     kPeriodLcdKeypad            = 250,      // Period to refresh Lcd and scan keypad in milliseconds
     kPeriodSensors              = 5,        // Period to call sensors loop in milliseconds
     kPeriodWarmup               = 1000,     // Period to warmup the system in milliseconds
+    kPeriodStabilization        = 100,      // Stablization period between respiration cycles
     kEEPROM_Version             = 1,        // EEPROM version must match this version for compatibility
     kMaxCurveCount              = 16,       // Maximum respiration curve index count
 };
@@ -44,6 +45,7 @@ enum eCycleState
     kCycleState_WaitTrigger = 0,
     kCycleState_Inhale,
     kCycleState_Exhale,
+    kCycleState_Stabilization,
 
     kCycleState_Count
 };

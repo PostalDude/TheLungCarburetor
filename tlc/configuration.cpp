@@ -59,8 +59,8 @@ bool Configuration_SetDefaults()
     gConfiguration.nServoExhaleCloseAngle   = 0;
     gConfiguration.nCRC                     = 0; // Clear CRC for computation
     Configuration_Write();
-	
-	return true;
+
+    return true;
 }
 
 // Read configuration from EEPROM, returns false if bad CRC or eeprom version
