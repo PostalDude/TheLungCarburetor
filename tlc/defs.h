@@ -16,6 +16,7 @@ enum eConsts
     kPeriodCommPublish          = 500,      // Period to send status information to controller
     kPeriodControl              = 5,        // Period to call control loop in milliseconds
     kPeriodCommunications       = 2,        // Period to call communications loop in milliseconds
+    kPeriodLcdKeypad            = 250,      // Period to refresh Lcd and scan keypad in milliseconds
     kPeriodSensors              = 5,        // Period to call sensors loop in milliseconds
     kPeriodWarmup               = 1000,     // Period to warmup the system in milliseconds
     kEEPROM_Version             = 1,        // EEPROM version must match this version for compatibility

@@ -7,6 +7,7 @@
 #include "sensors.h"
 #include "gpio.h"
 #include "configuration.h"
+#include "lcd_keypad.h"
 
 static uint32_t gStartTick = 0;
 
@@ -25,6 +26,8 @@ void setup()
     Control_Init();
 
     Safeties_Init();
+
+    LcdKeypad_Init();
         
     bool cfgSuccess = Configuration_Init();
     
@@ -115,6 +118,12 @@ void loop()
     {
         Control_Process();
         gDataModel.nTickControl = millis();
+    }
+
+    if ((millis() - gDataModel.nTickLcdKeypad) >= kPeriodLcdKeypad)
+    {
+        LcdKeypad_Process();
+        gDataModel.nTickLcdKeypad = millis();
     }
     
     Safeties_Process();
