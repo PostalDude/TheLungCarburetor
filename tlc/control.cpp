@@ -273,7 +273,8 @@ void Control_Process()
     switch (gDataModel.nControlMode)
     {
     case kControlMode_PID:
-        if (ComputeRespirationSetPoint())
+       	// It is assumed that the last pressure setpoint in the exhale curve is kept between respiration
+		if (ComputeRespirationSetPoint())
         {
             Control_PID();
         }
@@ -289,6 +290,7 @@ void Control_Process()
         gDataModel.nPWMPump             = 0;
         break;
     };
+	
 
     // Pump power to output
     digitalWrite(PIN_OUT_PUMPS_ENABLE, HIGH);

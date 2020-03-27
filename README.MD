@@ -8,10 +8,9 @@ A serial port controller configure the device and pressure curve to apply to the
 ## Installation
 - Install Arduino IDE
 - Add Adafruit RGB LCD Shield library
-- Add libraries from the **arduinolibs** folder: (millisDelay, arduino-msgpack, servotimer2)
+- Add libraries from the **arduinolibs** folder: (millisDelay, servotimer2)
 - Build
 - Program
 
-Lead Developer: Frédéric Lauzon
 
 
