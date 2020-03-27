@@ -49,15 +49,15 @@ void Communications_Process()
         if ((millis() - gTickPublish) > kPeriodCommPublish)
         {
             //*** Needs profiling
-            Serial.println("PS1:"); Serial.println(gDataModel.fPressure_mmH2O[0], 2);
-            Serial.println("PS2:"); Serial.println(gDataModel.fPressure_mmH2O[1], 2);
-            Serial.println("RQP:"); Serial.println(gDataModel.fRequestPressure_mmH2O, 2);
-            Serial.println("BAT:"); Serial.println(gDataModel.fBatteryLevel, 2);
-            Serial.println("PMP:"); Serial.println(gDataModel.nPWMPump, DEC);
-            Serial.println("STA:"); Serial.println(gDataModel.nState, DEC);
-            Serial.println("CTL:"); Serial.println(gDataModel.nControlMode, DEC);
-            Serial.println("TRG:"); Serial.println(gDataModel.nTriggerMode, DEC);
-            Serial.println("CYC:"); Serial.println(gDataModel.nCycleState, DEC);
+            Serial.print("PS1:"); Serial.println(gDataModel.fPressure_mmH2O[0], 2);
+            Serial.print("PS2:"); Serial.println(gDataModel.fPressure_mmH2O[1], 2);
+            Serial.print("RQP:"); Serial.println(gDataModel.fRequestPressure_mmH2O, 2);
+            Serial.print("BAT:"); Serial.println(gDataModel.fBatteryLevel, 2);
+            Serial.print("PMP:"); Serial.println(gDataModel.nPWMPump, DEC);
+            Serial.print("STA:"); Serial.println(gDataModel.nState, DEC);
+            Serial.print("CTL:"); Serial.println(gDataModel.nControlMode, DEC);
+            Serial.print("TRG:"); Serial.println(gDataModel.nTriggerMode, DEC);
+            Serial.print("CYC:"); Serial.println(gDataModel.nCycleState, DEC);
 
             gTickPublish = millis();
         }
