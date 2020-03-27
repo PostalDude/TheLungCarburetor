@@ -9,15 +9,21 @@
 enum eConsts
 {
     kSerialBaudRate             = 115200,   // Baud rate of serial port
+    kSerialRxTimeOut            = 10,       // Maximum wait time in ms to wait for serial data
+    kRxBufferSize               = 250,      // Maximum rx buffer size
+    kRxBufferReserve            = 10,       // Reserve of data before we start discarding rx buffer
+    kSerialDiscardTimeout       = 500,      // Discard rx buffer timeout
+    kPeriodCommPublish          = 500,      // Period to send status information to controller
     kPeriodControl              = 5,        // Period to call control loop in milliseconds
     kPeriodCommunications       = 2,        // Period to call communications loop in milliseconds
     kPeriodSensors              = 5,        // Period to call sensors loop in milliseconds
     kPeriodWarmup               = 1000,     // Period to warmup the system in milliseconds
     kEEPROM_Version             = 1,        // EEPROM version must match this version for compatibility
-    kMaxCurveCount              = 64,       // Maximum respiration curve index count
+    kMaxCurveCount              = 32,       // Maximum respiration curve index count
 };
 
 HXCOMPILATIONASSERT(assertSensorPeriodCheck, (kPeriodSensors >= 1));
+HXCOMPILATIONASSERT(assertRXBufferSizeCheck, (kRxBufferSize < 255));
 
 // State of the system
 enum eState
@@ -89,7 +95,7 @@ const float kBatteryLevelGain                   = 3.0f;
 #define PIN_PRESSURE1           A1      // Pressure readings from MPX redundant pressure sensor
 #define PIN_BATTERY             A2      // Battery voltage
 
-#define PIN_LCD_KEYPAD_SDA		A4
-#define PIN_LCD_KEYPAD_SCL		A5
+#define PIN_LCD_KEYPAD_SDA      A4
+#define PIN_LCD_KEYPAD_SCL      A5
 
 #endif // TLC_DEFS_H
