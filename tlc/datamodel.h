@@ -41,6 +41,7 @@ struct tDataModel
     uint32_t        nTickSensors;           // Last sensors tick
     uint32_t        nTickSetPoint;          // Current curve pressure set-point ticker
     uint32_t        nTickRespiration;       // Start of respiration tick
+    uint32_t        nTickStabilization;     // Stabilization tick between respiration
     uint32_t        nTickLcdKeypad;         // Lcd and Keypad update and scan rate
 };
 
