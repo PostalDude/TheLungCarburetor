@@ -1,11 +1,17 @@
-The Lung Carburetor Firmware
-----------------------------
+# The Lung Carburetor Firmware
 
-This device controls an artificial respirator.
+This device controls a low-cost ventilator.
 
 This application features control loops to set pressure points with feedback using pressure sensors.
 A serial port controller configure the device and pressure curve to apply to the pump.
 
--- TBD
+## Installation
+- Install Arduino IDE
+- Add Adafruit RGB LCD Shield library
+- Add libraries from the **arduinolibs** folder: (millisDelay, arduino-msgpack, servotimer2)
+- Build
+- Program
 
 Lead Developer: Frédéric Lauzon
+
+

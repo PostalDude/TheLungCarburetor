@@ -61,6 +61,8 @@ void loop()
     // Warmup system and sensors to have valid readings when going in process state
     case kState_Warmup:
         digitalWrite(PIN_OUT_BUZZER, LOW);
+		digitalWrite(PIN_OUT_EMERGENCY_RELAY, HIGH);
+		
         if ((millis() - gStartTick) >= kPeriodWarmup)
         {
             gDataModel.nState = kState_Process;
@@ -74,6 +76,7 @@ void loop()
     // Error state in case of safeties issues
     case kState_Error:
         digitalWrite(PIN_OUT_BUZZER, HIGH);
+		digitalWrite(PIN_OUT_EMERGENCY_RELAY, LOW);
         
         // Stay in error until recovery
         if (gSafeties.bEnabled)

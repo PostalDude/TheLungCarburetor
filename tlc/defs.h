@@ -89,4 +89,7 @@ const float kBatteryLevelGain                   = 3.0f;
 #define PIN_PRESSURE1           A1      // Pressure readings from MPX redundant pressure sensor
 #define PIN_BATTERY             A2      // Battery voltage
 
+#define PIN_LCD_KEYPAD_SDA		A4
+#define PIN_LCD_KEYPAD_SCL		A5
+
 #endif // TLC_DEFS_H
