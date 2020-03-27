@@ -40,7 +40,8 @@ void Safeties_Process()
     }
 
     // If any safety issue, set bCritical in global safeties structure
-    if (gSafeties.bEnabled)
+ #if 0 //*** TEST   
+	if (gSafeties.bEnabled)
     {
         float fPressureDelta = gDataModel.fPressure_mmH2O[0] - gDataModel.fPressure_mmH2O[1];
 
@@ -54,4 +55,6 @@ void Safeties_Process()
             gDataModel.nState   = kState_Error;
         }
     }
+#endif
+	
 }

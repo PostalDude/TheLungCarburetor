@@ -18,11 +18,14 @@ Adafruit_RGBLCDShield lcd = Adafruit_RGBLCDShield();
 #define VIOLET 0x5
 #define WHITE 0x7
 
+char gLcdMsg[128];
+
 bool LcdKeypad_Init()
 {
 // set up the LCD's number of columns and rows:
   lcd.begin(16, 2);
   lcd.setBacklight(WHITE);
+  gLcdMsg[0] = '\0';
 
   return true;
 }
@@ -33,7 +36,7 @@ void LcdKeypad_Process()
   // set the cursor to column 0, line 1
   // (note: line 1 is the second row, since counting begins with 0):
   lcd.setCursor(0, 0);
-  lcd.print("Hello!");
+  lcd.print(gLcdMsg);
 
   // print the number of seconds since reset:
   lcd.setCursor(5, 1);

@@ -72,11 +72,11 @@ void loop()
         break;
         
     // Normal processing
-    case kState_Process:
+    case kState_Process:    
         break;
         
     // Error state in case of safeties issues
-    case kState_Error:
+    case kState_Error:    
         digitalWrite(PIN_OUT_BUZZER, LOW);
 	       
         // Stay in error until recovery

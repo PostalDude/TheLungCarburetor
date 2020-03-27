@@ -307,8 +307,6 @@ void Control_Process()
 
 
     // Pump power to output
-    //analogWrite(PIN_OUT_PUMP1_PWM, gDataModel.nPWMPump);
-    //TODO Setp pwm value here from 0 to 1000
-    Timer1.pwm(9, 0);                // setup pwm on pin 9, 50% duty cycle  ( 0 to 1000) 
-
+    //analogWrite(PIN_OUT_PUMP1_PWM, gDataModel.nPWMPump);    
+    Timer1.pwm(PIN_OUT_PUMP1_PWM, gDataModel.nPWMPump);                // setup pwm on pin 9, 50% duty cycle  ( 0 to 1000) 
 }

@@ -1,5 +1,6 @@
 #include "configuration.h"
 #include <EEPROM.h>
+#include "lcd_keypad.h"
 
 tConfiguration gConfiguration;
 
@@ -10,8 +11,15 @@ bool Configuration_Init()
     bool bValid = Configuration_Read();
     if (!bValid)
     {
+		sprintf(gLcdMsg, "NVM Fail");
         Configuration_SetDefaults();
     }
+	else
+	{
+		sprintf(gLcdMsg, "NVM Success");
+		
+	}
+
     return bValid;
 }
 
