@@ -77,21 +77,16 @@ const float kBatteryLevelGain                   = 3.0f;
 #define PIN_SERIAL_TX           1       // Serial port TX
 
 #define PIN_OUT_SERVO_EXHALE    2       // Servo exhale valve
-#define PIN_OUT_EMERGENCY_RELAY 3       // Emergency call line relay
 
 // Timer0 used by millis
+// timer1 used by TimerOne
 // Timer2 used by ServoTimer2
 // pins 3 and 11 analogWrite are disabled by the use of servotimer2 library
 
-#define PIN_OUT_PUMP1_DIRA      4       // DIRA=0, DIRB=1 -> Clockwise
-#define PIN_OUT_PUMP1_DIRB      5       // DIRA=1, DIRB=0 -> AntiClockwise
-#define PIN_OUT_PUMPS_ENABLE    6       // Enabled when 1
-#define PIN_OUT_PUMP2_DIRA      7       // DIRA=0, DIRB=1 -> Clockwise
-#define PIN_OUT_PUMP2_DIRB      8       // DIRA=1, DIRB=0 -> AntiClockwise
+// this pin cannot be changes since we use the timer1 port
 #define PIN_OUT_PUMP1_PWM       9       // Ambu pump Cam PWM output
-#define PIN_OUT_PUMP2_PWM       10      // Ambu pump Cam PWM output
 
-#define PIN_OUT_BUZZER          11      // Buzzer signal output
+#define PIN_OUT_BUZZER          5      // Buzzer signal output
 
 #define PIN_PRESSURE0           A0      // Pressure readings from MPX pressure sensor
 #define PIN_PRESSURE1           A1      // Pressure readings from MPX redundant pressure sensor

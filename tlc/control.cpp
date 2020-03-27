@@ -2,6 +2,7 @@
 #include "datamodel.h"
 #include "configuration.h"
 #include "safeties.h"
+#include "TimerOne.h"
 
 ServoTimer2 exhaleValveServo;
 
@@ -9,6 +10,10 @@ bool Control_Init()
 {
     gDataModel.nTickRespiration = millis(); // Respiration cycle start tick. Used to compute respiration per minutes
     exhaleValveServo.write(gConfiguration.nServoExhaleCloseAngle);
+  
+    Timer1.initialize(4000);         // initialize timer1, and set a 4000us period
+    Timer1.pwm(9, 0);                // setup pwm on pin 9, 50% duty cycle  ( 0 to 1000) 
+
     return true;
 }
 
@@ -291,13 +296,8 @@ void Control_Process()
     };
 
     // Pump power to output
-    digitalWrite(PIN_OUT_PUMPS_ENABLE, HIGH);
-    digitalWrite(PIN_OUT_PUMP1_DIRA, LOW);      // Pump1 rotate clockwise
-    digitalWrite(PIN_OUT_PUMP1_DIRB, HIGH);
-    analogWrite(PIN_OUT_PUMP1_PWM, gDataModel.nPWMPump);
+    //analogWrite(PIN_OUT_PUMP1_PWM, gDataModel.nPWMPump);
+    //TODO Setp pwm value here from 0 to 1000
+    Timer1.pwm(9, 0);                // setup pwm on pin 9, 50% duty cycle  ( 0 to 1000) 
 
-    // Pump 2 not in used in this version
-    digitalWrite(PIN_OUT_PUMP1_DIRA, LOW);
-    digitalWrite(PIN_OUT_PUMP1_DIRB, LOW);
-    analogWrite(PIN_OUT_PUMP2_PWM, 0);
 }

@@ -14,32 +14,32 @@ bool GPIO_Init()
 
     // Set pin mode for buzzer
     pinMode(PIN_OUT_BUZZER, OUTPUT);
-    digitalWrite(PIN_OUT_BUZZER, LOW);
-
-    pinMode(PIN_OUT_EMERGENCY_RELAY, OUTPUT);
     digitalWrite(PIN_OUT_BUZZER, HIGH);
 
+    //pinMode(PIN_OUT_EMERGENCY_RELAY, OUTPUT);
+    //digitalWrite(PIN_OUT_BUZZER, HIGH);
+
     // Set pin mode for pressure pump
-    pinMode(PIN_OUT_PUMP1_DIRA, OUTPUT);
-    digitalWrite(PIN_OUT_PUMP1_DIRA, LOW);
+    //pinMode(PIN_OUT_PUMP1_DIRA, OUTPUT);
+    //digitalWrite(PIN_OUT_PUMP1_DIRA, LOW);
 
-    pinMode(PIN_OUT_PUMP1_DIRB, OUTPUT);
-    digitalWrite(PIN_OUT_PUMP1_DIRB, LOW);
+    //pinMode(PIN_OUT_PUMP1_DIRB, OUTPUT);
+    //digitalWrite(PIN_OUT_PUMP1_DIRB, LOW);
 
-    pinMode(PIN_OUT_PUMP2_DIRA, OUTPUT);
-    digitalWrite(PIN_OUT_PUMP2_DIRA, LOW);
+    //pinMode(PIN_OUT_PUMP2_DIRA, OUTPUT);
+    //digitalWrite(PIN_OUT_PUMP2_DIRA, LOW);
 
-    pinMode(PIN_OUT_PUMP2_DIRB, OUTPUT);
-    digitalWrite(PIN_OUT_PUMP2_DIRB, LOW);
+    //pinMode(PIN_OUT_PUMP2_DIRB, OUTPUT);
+    //digitalWrite(PIN_OUT_PUMP2_DIRB, LOW);
 
     pinMode(PIN_OUT_PUMP1_PWM, OUTPUT);
-    analogWrite(PIN_OUT_PUMP1_PWM, 0);
+    digitalWrite(PIN_OUT_PUMP1_PWM, LOW);
 
-    pinMode(PIN_OUT_PUMP2_PWM, OUTPUT);
-    analogWrite(PIN_OUT_PUMP2_PWM, 0);
+    //pinMode(PIN_OUT_PUMP2_PWM, OUTPUT);
+    //analogWrite(PIN_OUT_PUMP2_PWM, 0);
 
-    pinMode(PIN_OUT_PUMPS_ENABLE, OUTPUT);
-    digitalWrite(PIN_OUT_PUMPS_ENABLE, HIGH);
+    //pinMode(PIN_OUT_PUMPS_ENABLE, OUTPUT);
+    //digitalWrite(PIN_OUT_PUMPS_ENABLE, HIGH);
 
     return true;
 }
