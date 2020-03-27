@@ -28,6 +28,7 @@ extern tConfiguration gConfiguration;
 HXCOMPILATIONASSERT(assertEEPROMSizeCheck, (sizeof(tConfiguration) <= 512));
 
 bool Configuration_Init();
+bool Configuration_SetDefaults();
 bool Configuration_Read();
 bool Configuration_Write();
 

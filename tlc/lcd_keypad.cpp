@@ -20,10 +20,10 @@ Adafruit_RGBLCDShield lcd = Adafruit_RGBLCDShield();
 
 bool LcdKeypad_Init()
 {
-// set up the LCD's number of columns and rows: 
-  lcd.begin(16, 2);  
+// set up the LCD's number of columns and rows:
+  lcd.begin(16, 2);
   lcd.setBacklight(WHITE);
-  
+
   return true;
 }
 
@@ -65,5 +65,5 @@ void LcdKeypad_Process()
       lcd.setBacklight(VIOLET);
     }
   }
-  
+
 }

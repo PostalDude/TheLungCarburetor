@@ -7,7 +7,12 @@ tConfiguration gConfiguration;
 bool Configuration_Init()
 {
     memset(&gConfiguration, 0, sizeof(tConfiguration));
-    return Configuration_Read();
+    bool bValid = Configuration_Read();
+    if (!bValid)
+    {
+        Configuration_SetDefaults();
+    }
+    return bValid;
 }
 
 //
@@ -33,6 +38,29 @@ static uint32_t CRC32(uint8_t* pBuffer, int len)
     }
 
     return crc;
+}
+
+bool Configuration_SetDefaults()
+{
+    gConfiguration.nVersion                 = kEEPROM_Version;
+    gConfiguration.nPressureSensorOffset[0] = 0;
+    gConfiguration.nPressureSensorOffset[1] = 0;
+    gConfiguration.fMaxPressureLimit_mmH2O  = kMPX5010_MaxPressure_mmH2O;
+    gConfiguration.fMinPressureLimit_mmH2O  = -kMPX5010_MaxPressure_mmH2O;
+    gConfiguration.fMaxPressureDelta_mmH2O  = kMPX5010_MaxPressureDelta_mmH2O;
+    gConfiguration.fGainP                   = 0.1f;
+    gConfiguration.fGainI                   = 0.0001f;
+    gConfiguration.fGainD                   = 0.0000f;
+    gConfiguration.fILimit                  = 100.0f;
+    gConfiguration.fPILimit                 = 254.0f;
+    gConfiguration.fControlTransfer         = 1.0f;
+    gConfiguration.fPatientTrigger_mmH2O    = 40.0f;
+    gConfiguration.nServoExhaleOpenAngle    = 180;
+    gConfiguration.nServoExhaleCloseAngle   = 0;
+    gConfiguration.nCRC                     = 0; // Clear CRC for computation
+    Configuration_Write();
+	
+	return true;
 }
 
 // Read configuration from EEPROM, returns false if bad CRC or eeprom version
