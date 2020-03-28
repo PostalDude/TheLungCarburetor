@@ -1,8 +1,7 @@
 #include "serialportreader.h"
+
 #include "common.h"
 #include "datamodel.h"
-
-#include <sstream>
 
 namespace
 {
@@ -119,12 +118,13 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
     if (length < 3)
         return false;
 
-    char command[4] = { pData[dataIndex++], pData[dataIndex++], pData[dataIndex++], '\0' };
-
+    uint8_t command[4] = { pData[dataIndex++], pData[dataIndex++], pData[dataIndex++], '\0' };
+    
     uint8_t commandIndex = 0;
     for (commandIndex = 1; commandIndex < Commands_Count; ++commandIndex)
     {
-        if (strcmp(command, CommandsData[commandIndex]) == 0)
+        // this reinterpret cast is annoying
+        if (strcmp(reinterpret_cast<char*>(command), CommandsData[commandIndex]) == 0)
         {
             // we found our command!
             break;
@@ -139,29 +139,33 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
         break;
     case Commands_Status:
     {
-        std::stringstream ss;
-        ss << "PS1:" << gDataModel.fPressure_mmH2O[0]
-            << ",PS2:" << gDataModel.fPressure_mmH2O[1]
-            << ",RQP:" << gDataModel.fRequestPressure_mmH2O
-            << ",BAT:" << gDataModel.fBatteryLevel
-            << ",PMP:" << (int)gDataModel.nPWMPump
-            << ",STA:" << (int)gDataModel.nState
-            << ",CTL:" << (int)gDataModel.nControlMode
-            << ",TRG:" << (int)gDataModel.nTriggerMode
-            << ",CYC:" << (int)gDataModel.nCycleState
-            << "\r\n";
-        Serial.print(ss.str().c_str());
+        char buffer[1024] = { 0 };
+        sprintf_P(buffer, "PS1:%f,PS2:%f,RQP:%f,BAT:%f,PMP:%d,STA:%d,CTL:%d,TRG:%d,CYC:%d\r\n", 
+            gDataModel.fPressure_mmH2O[0],
+            gDataModel.fPressure_mmH2O[1],
+            gDataModel.fRequestPressure_mmH2O,
+            gDataModel.fBatteryLevel, 
+            static_cast<int>(gDataModel.nPWMPump),
+            static_cast<int>(gDataModel.nState),
+            static_cast<int>(gDataModel.nControlMode),
+            static_cast<int>(gDataModel.nTriggerMode),
+            static_cast<int>(gDataModel.nCycleState));
+        Serial.print(buffer);
     }
     break;
     case Commands_Trigger:
     {
-        float* temp = 0;
-        uint8_t count;
-        if (getValueArray(pData, dataIndex, length, temp, count))
+        uint8_t temp = 0;
+        bool ok = getValue(pData, dataIndex, length, temp);
+        if (ok)        
+            ok = temp < kTriggerMode_Count;
+        if (ok)
+        {
+            gDataModel.nTriggerMode = static_cast<eTriggerMode>(temp);
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
+        }
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
-        delete[] temp;
     }
     break;
     case Commands_Fio:
@@ -175,7 +179,67 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
     break;
     case Commands_Curve:
     {
-        Serial.print(ReturnCommands[ReturnCommands_NACK]);
+        float breatheRate = 0.0f;
+        float* inhaleCurveMM = nullptr;
+        float* exhaleCurveMM = nullptr;
+        float* inhaleCurveTime = nullptr;
+        float* exhaleCurveTime = nullptr;
+        uint8_t inhaleCountMM = 0;
+        uint8_t exhaleCountMM = 0;
+        uint8_t inhaleCountTime = 0;
+        uint8_t exhaleCountTime = 0;
+
+        // breathe rate
+        bool ok = getValue(pData, dataIndex, length, breatheRate);
+
+        // Inhale
+        if (ok)
+        {
+            ok = getValueArray(pData, dataIndex, length, inhaleCurveMM, inhaleCountMM);
+        }
+        if (ok)
+        {
+            ok = getValueArray(pData, dataIndex, length, inhaleCurveTime, inhaleCountTime);
+        }
+
+        // Exhale
+        if (ok)
+        {
+            ok = getValueArray(pData, dataIndex, length, exhaleCurveMM, exhaleCountMM);
+        }
+        if (ok)
+        {
+            ok = getValueArray(pData, dataIndex, length, exhaleCurveTime, exhaleCountTime);
+        }
+
+        // TODO what should be the minimum amount of points in the curve?
+        // Should we add warnings here?
+        ok = inhaleCountMM == inhaleCountTime && exhaleCountMM == exhaleCountTime &&
+             inhaleCountMM > 0 && exhaleCountMM > 0 && inhaleCountMM < kMaxCurveCount && exhaleCountMM < kMaxCurveCount;
+        
+        if (ok)
+        {
+            gDataModel.nRespirationPerMinute = static_cast<uint8_t>(breatheRate);
+
+            gDataModel.pInhaleCurve.nCount = inhaleCountMM;
+            for (uint8_t n = 0; n < inhaleCountMM; ++n)
+            {
+                gDataModel.pInhaleCurve.fSetPoint_mmH2O[n] = inhaleCurveMM[n];
+                gDataModel.pInhaleCurve.nSetPoint_TickMs[n] = static_cast<uint32_t>(inhaleCurveTime[n] * (1.0f / gDataModel.nRespirationPerMinute) * 1000);
+            }
+
+            gDataModel.pExhaleCurve.nCount = exhaleCountMM;
+            for (uint8_t n = 0; n < exhaleCountMM; ++n)
+            {
+                gDataModel.pExhaleCurve.fSetPoint_mmH2O[n] = exhaleCurveMM[n];
+                gDataModel.pExhaleCurve.nSetPoint_TickMs[n] = static_cast<uint32_t>(exhaleCurveTime[n] * (1.0f / gDataModel.nRespirationPerMinute) * 1000);
+            }
+        }
+        
+        if (!ok)
+            Serial.print(ReturnCommands[ReturnCommands_NACK]);
+        else
+            Serial.print(ReturnCommands[ReturnCommands_ACK]);
     }
     break;
     case Commands_InhalePsi:
@@ -205,6 +269,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
         delete[] inhalePsi;
+        inhalePsi = nullptr;
     }
     break;
     case Commands_AlarmPsi:
@@ -216,6 +281,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
         delete[] psi;
+        psi = nullptr;
     }
     break;
     case Commands_AlarmO2Mix:
@@ -227,6 +293,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
         delete[] o2mix;
+        o2mix = nullptr;
     }
     break;
     case Commands_AlarmRebreathing:

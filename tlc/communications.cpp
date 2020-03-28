@@ -41,22 +41,6 @@ void Communications_Process()
     }
     else
     {
-        /*if ((millis() - gTickPublish) > kPeriodCommPublish)
-        {
-            //*** Needs profiling
-            Serial.print("PS1:"); Serial.println(gDataModel.fPressure_mmH2O[0], 2);
-            Serial.print("PS2:"); Serial.println(gDataModel.fPressure_mmH2O[1], 2);
-            Serial.print("RQP:"); Serial.println(gDataModel.fRequestPressure_mmH2O, 2);
-            Serial.print("BAT:"); Serial.println(gDataModel.fBatteryLevel, 2);
-            Serial.print("PMP:"); Serial.println(gDataModel.nPWMPump, DEC);
-            Serial.print("STA:"); Serial.println(gDataModel.nState, DEC);
-            Serial.print("CTL:"); Serial.println(gDataModel.nControlMode, DEC);
-            Serial.print("TRG:"); Serial.println(gDataModel.nTriggerMode, DEC);
-            Serial.print("CYC:"); Serial.println(gDataModel.nCycleState, DEC);
-
-            gTickPublish = millis();
-        }*/
-
         // Process input string, wait for AT .... <cr><lf>
         if (Serial.available() > 0)
         {
@@ -80,16 +64,16 @@ void Communications_Process()
                 if (gRxBuffer.data[a]   == '\r' &&
                     gRxBuffer.data[a+1] == '\n')
                 {
-                    SerialPortReader::ParseCommand(&gRxBuffer.data[cmdOfs], a+1 - cmdOfs);
+                    SerialPortReader::ParseCommand(&gRxBuffer.data[cmdOfs], a+2 - cmdOfs);
 
                     ++a;
                     cmdOfs = a+1;
                 }
             }
 
-            if (cmdOfs > 0 && cmdOfs < count)
+            if (cmdOfs > 0 && cmdOfs <= count)
             {
-                memmove(&gRxBuffer.data[0], &gRxBuffer.data[cmdOfs], count-cmdOfs);
+                memmove(&gRxBuffer.data[0], &gRxBuffer.data[cmdOfs], cmdOfs);
                 count = count - cmdOfs;
             }
 
