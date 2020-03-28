@@ -34,7 +34,7 @@ struct tDataModel
     float           fI;                     // Control Integral
     float           fD;                     // Control Derivative
     float           fPI;                    // Control Sum of Proportional and Integral errors
-    uint8_t         nPWMPump;               // Pump PWM power output
+    uint16_t        nPWMPump;               // Pump PWM power output
 
     uint32_t        nTickControl;           // Last control tick
     uint32_t        nTickCommunications;    // Last communications tick

@@ -8,17 +8,25 @@ tConfiguration gConfiguration;
 bool Configuration_Init()
 {
     memset(&gConfiguration, 0, sizeof(tConfiguration));
+
+#if 1 //*** Remove me when you will use eeprom settings
+    bool bValid = true;
+    Configuration_SetDefaults();
+
+#else //*** Put me back for normal setup
     bool bValid = Configuration_Read();
     if (!bValid)
     {
-		sprintf(gLcdMsg, "NVM Fail");
+        sprintf(gLcdMsg, "NVM Fail");
         Configuration_SetDefaults();
+        Configuration_Write();
     }
-	else
-	{
-		sprintf(gLcdMsg, "NVM Success");
-		
-	}
+    else
+    {
+        sprintf(gLcdMsg, "NVM Success");
+
+    }
+#endif
 
     return bValid;
 }
@@ -56,17 +64,16 @@ bool Configuration_SetDefaults()
     gConfiguration.fMaxPressureLimit_mmH2O  = kMPX5010_MaxPressure_mmH2O;
     gConfiguration.fMinPressureLimit_mmH2O  = -kMPX5010_MaxPressure_mmH2O;
     gConfiguration.fMaxPressureDelta_mmH2O  = kMPX5010_MaxPressureDelta_mmH2O;
-    gConfiguration.fGainP                   = 0.1f;
-    gConfiguration.fGainI                   = 0.0001f;
+    gConfiguration.fGainP                   = 250.5f;
+    gConfiguration.fGainI                   = 0.01f;
     gConfiguration.fGainD                   = 0.0000f;
-    gConfiguration.fILimit                  = 100.0f;
-    gConfiguration.fPILimit                 = 254.0f;
+    gConfiguration.fILimit                  = 5.0f;
+    gConfiguration.fPILimit                 = 1000.0f;
     gConfiguration.fControlTransfer         = 1.0f;
     gConfiguration.fPatientTrigger_mmH2O    = 40.0f;
-    gConfiguration.nServoExhaleOpenAngle    = 180;
-    gConfiguration.nServoExhaleCloseAngle   = 0;
+    gConfiguration.nServoExhaleOpenAngle    = 2270;
+    gConfiguration.nServoExhaleCloseAngle   = 750;
     gConfiguration.nCRC                     = 0; // Clear CRC for computation
-    Configuration_Write();
 
     return true;
 }

@@ -3,16 +3,17 @@
 #include "configuration.h"
 #include "safeties.h"
 #include "TimerOne.h"
+#include "lcd_keypad.h"
 
 ServoTimer2 exhaleValveServo;
 
 bool Control_Init()
 {
     gDataModel.nTickRespiration = millis(); // Respiration cycle start tick. Used to compute respiration per minutes
-    exhaleValveServo.write(gConfiguration.nServoExhaleCloseAngle);
-  
+    exhaleValveServo.write(gConfiguration.nServoExhaleOpenAngle);
+
     Timer1.initialize(4000);         // initialize timer1, and set a 4000us period
-    Timer1.pwm(9, 0);                // setup pwm on pin 9, 50% duty cycle  ( 0 to 1000) 
+    Timer1.pwm(PIN_OUT_PUMP1_PWM, 0);                // setup pwm on pin 9, 50% duty cycle  ( 0 to 1000)
 
     return true;
 }
@@ -20,7 +21,7 @@ bool Control_Init()
 // Control using a PID with pressure feedback
 void Control_PID()
 {
-    gDataModel.fPressureError = gDataModel.fPressure_mmH2O[0] - gDataModel.fRequestPressure_mmH2O;
+    gDataModel.fPressureError = gDataModel.fRequestPressure_mmH2O - gDataModel.fPressure_mmH2O[0];
     gDataModel.fP = gDataModel.fPressureError * gConfiguration.fGainP;
 
     gDataModel.fI += gDataModel.fPressureError;
@@ -51,7 +52,7 @@ void Control_PID()
         gDataModel.fPI = 0;
     }
 
-    gDataModel.nPWMPump = (uint8_t)(gDataModel.fPI * gConfiguration.fControlTransfer);
+    gDataModel.nPWMPump = (uint16_t)(gDataModel.fPI * gConfiguration.fControlTransfer);
 }
 
 // Return true when condition for respiration has been triggered
@@ -207,6 +208,7 @@ static bool ComputeRespirationSetPoint()
     switch (gDataModel.nCycleState)
     {
     case kCycleState_WaitTrigger:
+        sprintf(gLcdDetail, "Trigger   ");
         if (CheckTrigger())
         {
             BeginRespirationCycle();
@@ -224,6 +226,7 @@ static bool ComputeRespirationSetPoint()
 
     case kCycleState_Inhale:
         {
+            sprintf(gLcdDetail, "Inhale  ");
             bool inhaleFinished = Inhale();
             if (inhaleFinished)
             {
@@ -243,6 +246,7 @@ static bool ComputeRespirationSetPoint()
 
     case kCycleState_Exhale:
         {
+            sprintf(gLcdDetail, "Exhale   ");
             bool exhaleFinished = Exhale();
             if (exhaleFinished)
             {
@@ -255,6 +259,7 @@ static bool ComputeRespirationSetPoint()
         break;
 
     case kCycleState_Stabilization:
+        sprintf(gLcdDetail, "Stabil   ");
         // Pressure Stabilization between cycles
         if ((millis() - gDataModel.nTickStabilization) >= kPeriodStabilization)
         {
@@ -263,6 +268,7 @@ static bool ComputeRespirationSetPoint()
         break;
 
     default:
+        sprintf(gLcdDetail, "N/A   ");
         // Invalid setting
         gSafeties.bConfigurationInvalid = true;
         gDataModel.nPWMPump             = 0;
@@ -305,8 +311,6 @@ void Control_Process()
         break;
     };
 
-
     // Pump power to output
-    //analogWrite(PIN_OUT_PUMP1_PWM, gDataModel.nPWMPump);    
-    Timer1.pwm(PIN_OUT_PUMP1_PWM, gDataModel.nPWMPump);                // setup pwm on pin 9, 50% duty cycle  ( 0 to 1000) 
+    Timer1.pwm(PIN_OUT_PUMP1_PWM, gDataModel.nPWMPump);
 }

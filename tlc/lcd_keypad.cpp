@@ -19,54 +19,59 @@ Adafruit_RGBLCDShield lcd = Adafruit_RGBLCDShield();
 #define WHITE 0x7
 
 char gLcdMsg[128];
+char gLcdDetail[128];
 
 bool LcdKeypad_Init()
 {
-// set up the LCD's number of columns and rows:
-  lcd.begin(16, 2);
-  lcd.setBacklight(WHITE);
-  gLcdMsg[0] = '\0';
+    // set up the LCD's number of columns and rows:
+    lcd.begin(16, 2);
+    lcd.setBacklight(WHITE);
+    gLcdMsg[0] = '\0';
+    gLcdDetail[0] = '\0';
 
-  return true;
+    return true;
 }
 
 void LcdKeypad_Process()
 {
+    // set the cursor to column 0, line 1
+    // (note: line 1 is the second row, since counting begins with 0):
+    lcd.setCursor(0, 0);
+    lcd.print(gLcdMsg);
 
-  // set the cursor to column 0, line 1
-  // (note: line 1 is the second row, since counting begins with 0):
-  lcd.setCursor(0, 0);
-  lcd.print(gLcdMsg);
+    // print the number of seconds since reset:
+    lcd.setCursor(5, 1);
+    lcd.print(gLcdDetail);
 
-  // print the number of seconds since reset:
-  lcd.setCursor(5, 1);
-  lcd.print(millis()/100);
-
-  uint8_t buttons = lcd.readButtons();
-
-  if (buttons) {
-    lcd.clear();
-    lcd.setCursor(0,0);
-    if (buttons & BUTTON_UP) {
-      lcd.print("UP ");
-      lcd.setBacklight(RED);
+    uint8_t buttons = lcd.readButtons();
+    if (buttons)
+    {
+        lcd.clear();
+        lcd.setCursor(0,0);
+        if (buttons & BUTTON_UP)
+        {
+          lcd.print("UP ");
+          lcd.setBacklight(RED);
+        }
+        if (buttons & BUTTON_DOWN)
+        {
+          lcd.print("DOWN ");
+          lcd.setBacklight(YELLOW);
+        }
+        if (buttons & BUTTON_LEFT)
+        {
+          lcd.print("LEFT ");
+          lcd.setBacklight(GREEN);
+        }
+        if (buttons & BUTTON_RIGHT)
+        {
+          lcd.print("RIGHT ");
+          lcd.setBacklight(TEAL);
+        }
+        if (buttons & BUTTON_SELECT)
+        {
+          lcd.print("SELECT ");
+          lcd.setBacklight(VIOLET);
+        }
     }
-    if (buttons & BUTTON_DOWN) {
-      lcd.print("DOWN ");
-      lcd.setBacklight(YELLOW);
-    }
-    if (buttons & BUTTON_LEFT) {
-      lcd.print("LEFT ");
-      lcd.setBacklight(GREEN);
-    }
-    if (buttons & BUTTON_RIGHT) {
-      lcd.print("RIGHT ");
-      lcd.setBacklight(TEAL);
-    }
-    if (buttons & BUTTON_SELECT) {
-      lcd.print("SELECT ");
-      lcd.setBacklight(VIOLET);
-    }
-  }
-
 }
