@@ -1,5 +1,6 @@
 #include "communications.h"
 #include "datamodel.h"
+#include "serialportreader.h"
 
 static bool     gSerialConnected    = false;
 static uint32_t gTickPublish        = 0;
@@ -26,12 +27,6 @@ bool Communications_Init()
     return true;
 }
 
-static bool ParseCommand(uint8_t* pData, uint8_t length)
-{
-    (void)pData;
-    (void)length;
-    return true;
-}
 
 void Communications_Process()
 {
@@ -46,7 +41,7 @@ void Communications_Process()
     }
     else
     {
-        if ((millis() - gTickPublish) > kPeriodCommPublish)
+        /*if ((millis() - gTickPublish) > kPeriodCommPublish)
         {
             //*** Needs profiling
             Serial.print("PS1:"); Serial.println(gDataModel.fPressure_mmH2O[0], 2);
@@ -60,7 +55,7 @@ void Communications_Process()
             Serial.print("CYC:"); Serial.println(gDataModel.nCycleState, DEC);
 
             gTickPublish = millis();
-        }
+        }*/
 
         // Process input string, wait for AT .... <cr><lf>
         if (Serial.available() > 0)
@@ -85,7 +80,7 @@ void Communications_Process()
                 if (gRxBuffer.data[a]   == '\r' &&
                     gRxBuffer.data[a+1] == '\n')
                 {
-                    ParseCommand(&gRxBuffer.data[cmdOfs], a+1 - cmdOfs);
+                    SerialPortReader::ParseCommand(&gRxBuffer.data[cmdOfs], a+1 - cmdOfs);
 
                     ++a;
                     cmdOfs = a+1;
