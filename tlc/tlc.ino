@@ -104,26 +104,26 @@ void loop()
     
     if ((millis() - gDataModel.nTickCommunications) >= kPeriodCommunications)
     {
-        Communications_Process();
         gDataModel.nTickCommunications = millis();
+		Communications_Process();        
     }
         
     if ((millis() - gDataModel.nTickSensors) >= kPeriodSensors)
     {
-        Sensors_Process();
         gDataModel.nTickSensors = millis();
+		Sensors_Process();        
     }
     
     if ((millis() - gDataModel.nTickControl) >= kPeriodControl)
     {
-        Control_Process();
         gDataModel.nTickControl = millis();
+		Control_Process();        
     }
 
     if ((millis() - gDataModel.nTickLcdKeypad) >= kPeriodLcdKeypad)
     {
-        LcdKeypad_Process();
         gDataModel.nTickLcdKeypad = millis();
+		LcdKeypad_Process();
     }
     
     Safeties_Process();

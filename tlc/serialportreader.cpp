@@ -53,6 +53,16 @@ namespace
         "NACK\r\n" // in case someone uses the count item... 
     };
 
+	// Scratch Buffer to work on Array parsing
+	enum eConsts
+	{
+		kCommandSize		= 3,
+		kScratchBufferSize 	= 128,
+		kParseBufferSize	= 24
+	};
+	static uint8_t gScratchBuffer[kScratchBufferSize];
+	static char    gParseBuffer[kParseBufferSize];
+	
 
     template <typename T>
     bool getValue(const uint8_t* pData, uint8_t& index, const uint8_t length, T& value)
@@ -93,13 +103,18 @@ namespace
 
         if (count > 0)
         {
-            value = new T[count];
+			value = (T*)&gScratchBuffer[0];
+			if (count * sizeof(T) > kScratchBufferSize)
+			{
+				value = nullptr;
+				return false;
+			}
+			
             memset(value, 0, sizeof(T) * count);
             for (uint8_t n = 0; n < count; ++n)
             {
                 if (!getValue<T>(pData, index, length, value[n]))
                 {
-                    delete[] value;
                     value = nullptr;
                     return false;
                 }
@@ -114,16 +129,17 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
     // replace the end of the string with 0s so it's compatible with the strcmp function
     uint8_t dataIndex = 0;
 
-    // 3 first bytes is the command
-    if (length < 3)
+    // First bytes is the command
+    if (length < kCommandSize)
+	{
         return false;
+	}
 
-    uint8_t command[4] = { pData[dataIndex++], pData[dataIndex++], pData[dataIndex++], '\0' };
+    uint8_t command[kCommandSize + 1] = { pData[dataIndex++], pData[dataIndex++], pData[dataIndex++], '\0' };
     
     uint8_t commandIndex = 0;
     for (commandIndex = 1; commandIndex < Commands_Count; ++commandIndex)
     {
-        // this reinterpret cast is annoying
         if (strcmp(reinterpret_cast<char*>(command), CommandsData[commandIndex]) == 0)
         {
             // we found our command!
@@ -137,9 +153,9 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
     case Commands_Alive:
         Serial.print(ReturnCommands[ReturnCommands_ACK]);
         break;
+		
     case Commands_Status:
     {
-        char buffer[128] = { 0 };
         char floatStr[8];
         
         dtostrf(gDataModel.fPressure_mmH2O[0],0, 5, floatStr);
@@ -155,19 +171,20 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
         floatStr[7] = '\0';
         Serial.print(",BAT:"); Serial.print(floatStr); 
 
-        itoa(static_cast<int>(gDataModel.nPWMPump), buffer, 10);
-        Serial.print(",PMP:"); Serial.print(buffer); 
-        itoa(static_cast<int>(gDataModel.nState), buffer, 10);
-        Serial.print(",STA:"); Serial.print(buffer); 
-        itoa(static_cast<int>(gDataModel.nControlMode), buffer, 10);
-        Serial.print(",CTL:"); Serial.print(buffer); 
-        itoa(static_cast<int>(gDataModel.nTriggerMode), buffer, 10);
-        Serial.print(",TRG:"); Serial.print(buffer); 
-        itoa(static_cast<int>(gDataModel.nCycleState), buffer, 10);
-        Serial.print(",CYC:"); Serial.print(buffer); 
+        itoa(static_cast<int>(gDataModel.nPWMPump), gParseBuffer, 10);
+        Serial.print(",PMP:"); Serial.print(gParseBuffer); 
+        itoa(static_cast<int>(gDataModel.nState), gParseBuffer, 10);
+        Serial.print(",STA:"); Serial.print(gParseBuffer); 
+        itoa(static_cast<int>(gDataModel.nControlMode), gParseBuffer, 10);
+        Serial.print(",CTL:"); Serial.print(gParseBuffer); 
+        itoa(static_cast<int>(gDataModel.nTriggerMode), gParseBuffer, 10);
+        Serial.print(",TRG:"); Serial.print(gParseBuffer); 
+        itoa(static_cast<int>(gDataModel.nCycleState), gParseBuffer, 10);
+        Serial.print(",CYC:"); Serial.print(gParseBuffer); 
         Serial.print("\r\n");
     }
     break;
+	
     case Commands_Trigger:
     {
         uint8_t temp = 0;
@@ -183,6 +200,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
     }
     break;
+	
     case Commands_Fio:
     {
         uint8_t fio;
@@ -192,6 +210,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
     }
     break;
+	
     case Commands_Curve:
     {
         float breatheRate = 0.0f;
@@ -240,14 +259,28 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
             for (uint8_t n = 0; n < inhaleCountMM; ++n)
             {
                 gDataModel.pInhaleCurve.fSetPoint_mmH2O[n] = inhaleCurveMM[n];
-                gDataModel.pInhaleCurve.nSetPoint_TickMs[n] = static_cast<uint32_t>(inhaleCurveTime[n] * (1.0f / gDataModel.nRespirationPerMinute) * 1000);
+                if (gDataModel.nRespirationPerMinute != 0)
+				{
+					gDataModel.pInhaleCurve.nSetPoint_TickMs[n] = static_cast<uint32_t>(inhaleCurveTime[n] * (1.0f / gDataModel.nRespirationPerMinute) * 1000);
+				}
+				else
+				{
+					ok = false;
+				}
             }
 
             gDataModel.pExhaleCurve.nCount = exhaleCountMM;
             for (uint8_t n = 0; n < exhaleCountMM; ++n)
             {
                 gDataModel.pExhaleCurve.fSetPoint_mmH2O[n] = exhaleCurveMM[n];
-                gDataModel.pExhaleCurve.nSetPoint_TickMs[n] = static_cast<uint32_t>(exhaleCurveTime[n] * (1.0f / gDataModel.nRespirationPerMinute) * 1000);
+                if (gDataModel.nRespirationPerMinute != 0)
+				{
+					gDataModel.pExhaleCurve.nSetPoint_TickMs[n] = static_cast<uint32_t>(exhaleCurveTime[n] * (1.0f / gDataModel.nRespirationPerMinute) * 1000);
+				}
+				else
+				{
+					ok = false;
+				}
             }
         }
         
@@ -257,6 +290,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
     }
     break;
+	
     case Commands_InhalePsi:
     {
         uint8_t inhalePsi;
@@ -266,6 +300,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
     }
     break;
+	
     case Commands_ExhalePsi:
     {
         uint8_t exhalePsi;
@@ -275,6 +310,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
     }
     break;
+	
     case Commands_AlarmAirFlow:
     {
         uint8_t* inhalePsi = nullptr;
@@ -282,11 +318,10 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
         if (getValueArray(pData, dataIndex, length, inhalePsi, count) && count == 2)
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
-            Serial.print(ReturnCommands[ReturnCommands_NACK]);
-        delete[] inhalePsi;
-        inhalePsi = nullptr;
+            Serial.print(ReturnCommands[ReturnCommands_NACK]);        
     }
     break;
+	
     case Commands_AlarmPsi:
     {
         uint8_t* psi = nullptr;
@@ -295,10 +330,9 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
-        delete[] psi;
-        psi = nullptr;
     }
     break;
+	
     case Commands_AlarmO2Mix:
     {
         uint8_t* o2mix = nullptr;
@@ -307,10 +341,9 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
-        delete[] o2mix;
-        o2mix = nullptr;
     }
     break;
+	
     case Commands_AlarmRebreathing:
     {
         uint8_t rebreathing;
@@ -320,6 +353,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
     }
     break;
+	
     case Commands_SetZeroPsi:
     {
         uint8_t zeropsi;
@@ -329,6 +363,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
     }
     break;
+	
     default:
         Serial.print(ReturnCommands[ReturnCommands_NACK]);
         break;

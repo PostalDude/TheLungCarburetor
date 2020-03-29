@@ -14,7 +14,8 @@ struct tPressureCurve
 // Data Model structure, filled by sensors
 struct tDataModel
 {
-    eState          nState;                 // System state
+    uint16_t		nSafetyFlags;			// Bitmask of safety alarm source eAlarm
+	eState          nState;                 // System state
     eControlMode    nControlMode;           // Control mode of the pump
     eTriggerMode    nTriggerMode;           // Respiration trigger mode
     uint8_t         nRawPressure[2];        // Raw read pressure from sensor

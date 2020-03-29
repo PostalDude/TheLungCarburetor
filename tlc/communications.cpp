@@ -41,7 +41,6 @@ void Communications_Process()
     }
     else
     {
-        // Process input string, wait for AT .... <cr><lf>
         if (Serial.available() > 0)
         {
             if ((millis() - gRxBuffer.lastRxTick) > kSerialDiscardTimeout)
