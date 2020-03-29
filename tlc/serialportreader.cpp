@@ -238,7 +238,58 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
         if (ok) ok = getValue(pData, dataIndex, length, inhaleRatio);
         if (ok) ok = getValue(pData, dataIndex, length, exhaleRatio);
 
-        // MARTIN do your worst here!
+        // Updating Data model
+        float breatheTime = 1/breatheRate; //TODO: Pass breathe time instead of breathre Rate - or better yet, separate inhale and exhale times
+
+        //Inhale curve
+        tPressureCurve inhaleCurve;
+        inhaleCurve.nCount = 3; //Initial point, flex point, end point
+        inhaleCurve.nSetPoint_TickMs[0] = 0;
+        inhaleCurve.nSetPoint_TickMs[2] = breatheTime*inhaleRatio; //Assumes inhaleRatio + exhaleRatio = 1
+        inhaleCurve.nSetPoint_TickMs[1] = (uint32_t) inhaleCurve.nSetPoint_TickMs[2]/2; //I don't know if it's better to convert or to round.
+
+        inhaleCurve.fSetPoint_mmH2O[0] = exhaleMmH2O;
+        inhaleCurve.fSetPoint_mmH2O[1] = inhaleMmH2O;
+        inhaleCurve.fSetPoint_mmH2O[2] = inhaleMmH2O;
+        //TODO: Add more intermediary points if curve is not smooth enough
+
+        //Exhale curve
+        tPressureCurve exhaleCurve;
+        exhaleCurve.nCount = 3;
+        exhaleCurve.nSetPoint_TickMs[0] = 0;
+        exhaleCurve.nSetPoint_TickMs[2] = breatheTime*exhaleRatio; //Assumes inhaleRatio + exhaleRatio = 1
+        exhaleCurve.nSetPoint_TickMs[1] = (uint32_t) exhaleCurve.nSetPoint_TickMs[2]/2; //I don't know if it's better to convert or to round.
+
+        exhaleCurve.fSetPoint_mmH2O[0] = inhaleMmH2O;
+        exhaleCurve.fSetPoint_mmH2O[1] = exhaleMmH2O;
+        exhaleCurve.fSetPoint_mmH2O[2] = exhaleMmH2O;
+
+
+        gDataModel.pInhaleCurve = inhaleCurve;
+        gDataModel.pExhaleCurve = exhaleCurve;
+        /*********** IMPORTANT NOTE *******************/
+        /*
+        Depending on how this profile is read to send commands, this could cause the system to output something dangerous. I don't know where the profile is handled in the code.
+
+        Expected correct way (pseudo code):
+        
+        while (1)
+        if t between CurrentCurve.TickMS[0] and currentCurve.TickMS[1]
+            cmd = CurrentCurve.fSetPoint_mmH2O[1];
+
+        else if t between CurrentCurve.TickMS[1] and currentCurve.TickMS[2]
+            cmd = CurrentCurve.fSetPoint_mmH2O[2];
+
+        t++
+
+
+        Possible seemingly logical way that would yield the wrong profile
+
+        while(1)
+            for (i = 1; i<CurrentCurve.nCount; i++)
+                if (t == CurrentCurve.TickMS[i])
+                    currentCmd = CurrentCurve.fSetPoint_mmH2O[i];
+        */
 
         if (!ok)
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
