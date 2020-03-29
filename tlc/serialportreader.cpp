@@ -1,6 +1,7 @@
 #include "serialportreader.h"
 
 #include "common.h"
+#include "configuration.h"
 #include "datamodel.h"
 
 namespace
@@ -15,10 +16,12 @@ namespace
         Commands_Cycle,
         Commands_Fio,
         Commands_Curve,
+        Commands_AlarmMinBatteryLevel, // TODO
         Commands_AlarmLowTidalVolume,
         Commands_AlarmHighTidalVolume,
         Commands_AlarmLowPressure,
         Commands_AlarmHighPressure,
+        Commands_AlarmHighDeltaPressure,
         Commands_AlarmLowFio2Mix,
         Commands_AlarmHighFio2Mix,
         Commands_AlarmNonRebreathingValue,
@@ -36,10 +39,12 @@ namespace
         "CYC",
         "FIO",
         "CUR",
+        "MBL",
         "ALT",
         "AHT",
         "ALP",
         "AHP",
+        "ADP",
         "ALF",
         "AHF",
         "ANR",
@@ -91,7 +96,7 @@ namespace
     }
 
     template <typename T>
-    bool getValueArray(const uint8_t* pData, uint8_t& index, const uint8_t length, T*& value, uint8_t& count)
+    bool getValueArray(const uint8_t* pData, uint8_t& index, const uint8_t length, T*& value, int32_t& count)
     {
         value = nullptr;
 
@@ -105,30 +110,33 @@ namespace
             return false;
         }
 
+        if (count <= 0)
+        {
+            return false;
+        }
+
         if (index + (count * sizeof(T)) >= length)
         {
             return false;
         }
 
-        if (count > 0)
+        value = (T*)&gScratchBuffer[0];
+        if (count * sizeof(T) > kScratchBufferSize)
         {
-            value = (T*)&gScratchBuffer[0];
-            if (count * sizeof(T) > kScratchBufferSize)
+            value = nullptr;
+            return false;
+        }
+
+        memset(value, 0, sizeof(T) * count);
+        for (int32_t n = 0; n < count; ++n)
+        {
+            if (!getValue(pData, index, length, value[n]))
             {
                 value = nullptr;
                 return false;
             }
-
-            memset(value, 0, sizeof(T) * count);
-            for (uint8_t n = 0; n < count; ++n)
-            {
-                if (!getValue<T>(pData, index, length, value[n]))
-                {
-                    value = nullptr;
-                    return false;
-                }
-            }
         }
+
         return true;
     }
 }
@@ -156,7 +164,6 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
         }
     }
 
-    // TODO with more time we have to recheck this code which is super dependent on proper values.
     switch (commandIndex)
     {
     case Commands_Alive:
@@ -189,7 +196,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
     break;
     case Command_Trigger:
     {
-        uint8_t temp = 0;
+        int32_t temp = 0;
         bool ok = getValue(pData, dataIndex, length, temp);
         if (ok)
             ok = temp < kTriggerMode_Count;
@@ -205,10 +212,13 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
 
     case Commands_Cycle:
     {
-        uint8_t temp = 0;
+        int32_t temp = 0;
         bool ok = getValue(pData, dataIndex, length, temp);
         if (ok)
+        {
+            gDataModel.bStartFlag = temp != 0;
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
+        }
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
     }
@@ -217,7 +227,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
     case Commands_Fio:
     {
         float fio;
-        if (getValue(pData, dataIndex, length, fio))
+        if (getValue(pData, dataIndex, length, fio) && fio >= 20.0f && fio <= 100.0f)
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
@@ -237,72 +247,102 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
         if (ok) ok = getValue(pData, dataIndex, length, exhaleMmH2O);
         if (ok) ok = getValue(pData, dataIndex, length, inhaleRatio);
         if (ok) ok = getValue(pData, dataIndex, length, exhaleRatio);
+        // Validate the inputs.
+        if (ok)
+        {
+            ok = (
+                inhaleMmH2O >= 0.0f && inhaleMmH2O <= 40.0f &&
+                exhaleMmH2O >= 0.0f && exhaleMmH2O <= 25.0f &&
+                inhaleRatio >= 1.0f && exhaleRatio >= 1.0f &&
+                breatheRate >= 6.0f && breatheRate <= 40.0f
+            );
+        }
 
-        // Updating Data model
-        float breatheTime = 1/breatheRate; //TODO: Pass breathe time instead of breathre Rate - or better yet, separate inhale and exhale times
+        if (ok)
+        {
+          // Updating Data model
+          float breatheTime = 1/breatheRate; //TODO: Pass breathe time instead of breathre Rate - or better yet, separate inhale and exhale times
 
-        //Inhale curve
-        tPressureCurve inhaleCurve;
-        inhaleCurve.nCount = 3; //Initial point, flex point, end point
-        inhaleCurve.nSetPoint_TickMs[0] = 0;
-        inhaleCurve.nSetPoint_TickMs[2] = breatheTime*inhaleRatio; //Assumes inhaleRatio + exhaleRatio = 1
-        inhaleCurve.nSetPoint_TickMs[1] = (uint32_t) inhaleCurve.nSetPoint_TickMs[2]/2; //I don't know if it's better to convert or to round.
+          //Inhale curve
+          tPressureCurve inhaleCurve;
+          inhaleCurve.nCount = 3; //Initial point, flex point, end point
+          inhaleCurve.nSetPoint_TickMs[0] = 0;
+          inhaleCurve.nSetPoint_TickMs[2] = breatheTime*inhaleRatio; //Assumes inhaleRatio + exhaleRatio = 1
+          inhaleCurve.nSetPoint_TickMs[1] = (uint32_t) inhaleCurve.nSetPoint_TickMs[2]/2; //I don't know if it's better to convert or to round.
 
-        inhaleCurve.fSetPoint_mmH2O[0] = exhaleMmH2O;
-        inhaleCurve.fSetPoint_mmH2O[1] = inhaleMmH2O;
-        inhaleCurve.fSetPoint_mmH2O[2] = inhaleMmH2O;
-        //TODO: Add more intermediary points if curve is not smooth enough
+          inhaleCurve.fSetPoint_mmH2O[0] = exhaleMmH2O;
+          inhaleCurve.fSetPoint_mmH2O[1] = inhaleMmH2O;
+          inhaleCurve.fSetPoint_mmH2O[2] = inhaleMmH2O;
+          //TODO: Add more intermediary points if curve is not smooth enough
 
-        //Exhale curve
-        tPressureCurve exhaleCurve;
-        exhaleCurve.nCount = 3;
-        exhaleCurve.nSetPoint_TickMs[0] = 0;
-        exhaleCurve.nSetPoint_TickMs[2] = breatheTime*exhaleRatio; //Assumes inhaleRatio + exhaleRatio = 1
-        exhaleCurve.nSetPoint_TickMs[1] = (uint32_t) exhaleCurve.nSetPoint_TickMs[2]/2; //I don't know if it's better to convert or to round.
+          //Exhale curve
+          tPressureCurve exhaleCurve;
+          exhaleCurve.nCount = 3;
+          exhaleCurve.nSetPoint_TickMs[0] = 0;
+          exhaleCurve.nSetPoint_TickMs[2] = breatheTime*exhaleRatio; //Assumes inhaleRatio + exhaleRatio = 1
+          exhaleCurve.nSetPoint_TickMs[1] = (uint32_t) exhaleCurve.nSetPoint_TickMs[2]/2; //I don't know if it's better to convert or to round.
 
-        exhaleCurve.fSetPoint_mmH2O[0] = inhaleMmH2O;
-        exhaleCurve.fSetPoint_mmH2O[1] = exhaleMmH2O;
-        exhaleCurve.fSetPoint_mmH2O[2] = exhaleMmH2O;
-
-
-        gDataModel.pInhaleCurve = inhaleCurve;
-        gDataModel.pExhaleCurve = exhaleCurve;
-        /*********** IMPORTANT NOTE *******************/
-        /*
-        Depending on how this profile is read to send commands, this could cause the system to output something dangerous. I don't know where the profile is handled in the code.
-
-        Expected correct way (pseudo code):
-        
-        while (1)
-        if t between CurrentCurve.TickMS[0] and currentCurve.TickMS[1]
-            cmd = CurrentCurve.fSetPoint_mmH2O[1];
-
-        else if t between CurrentCurve.TickMS[1] and currentCurve.TickMS[2]
-            cmd = CurrentCurve.fSetPoint_mmH2O[2];
-
-        t++
+          exhaleCurve.fSetPoint_mmH2O[0] = inhaleMmH2O;
+          exhaleCurve.fSetPoint_mmH2O[1] = exhaleMmH2O;
+          exhaleCurve.fSetPoint_mmH2O[2] = exhaleMmH2O;
 
 
-        Possible seemingly logical way that would yield the wrong profile
+          gDataModel.pInhaleCurve = inhaleCurve;
+          gDataModel.pExhaleCurve = exhaleCurve;
+          /*********** IMPORTANT NOTE *******************/
+          /*
+          Depending on how this profile is read to send commands, this could cause the system to output something dangerous. I don't know where the profile is handled in the code.
 
-        while(1)
-            for (i = 1; i<CurrentCurve.nCount; i++)
-                if (t == CurrentCurve.TickMS[i])
-                    currentCmd = CurrentCurve.fSetPoint_mmH2O[i];
-        */
+          Expected correct way (pseudo code):
 
-        if (!ok)
-            Serial.print(ReturnCommands[ReturnCommands_NACK]);
-        else
+          while (1)
+          if t between CurrentCurve.TickMS[0] and currentCurve.TickMS[1]
+              cmd = CurrentCurve.fSetPoint_mmH2O[1];
+
+          else if t between CurrentCurve.TickMS[1] and currentCurve.TickMS[2]
+              cmd = CurrentCurve.fSetPoint_mmH2O[2];
+
+          t++
+
+
+          Possible seemingly logical way that would yield the wrong profile
+
+          while(1)
+              for (i = 1; i<CurrentCurve.nCount; i++)
+                  if (t == CurrentCurve.TickMS[i])
+                      currentCmd = CurrentCurve.fSetPoint_mmH2O[i];
+          */
+        }
+
+        if (ok)
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
+        else
+            Serial.print(ReturnCommands[ReturnCommands_NACK]);
+    }
+    break;
+
+    case Commands_AlarmMinBatteryLevel:
+    {
+        float temp;
+        if (getValue(pData, dataIndex, length, temp))
+        {
+            if (temp >= 0.1f) // TODO
+            {
+                gConfiguration.fMinBatteryLevel = temp;
+                Serial.print(ReturnCommands[ReturnCommands_ACK]);
+            }
+            else
+                Serial.print(ReturnCommands[ReturnCommands_NACK]);
+        }
+        else
+            Serial.print(ReturnCommands[ReturnCommands_NACK]);
     }
     break;
 
     case Commands_AlarmLowTidalVolume:
     {
-        uint8_t* temp = nullptr;
-        uint8_t count = 0;
-        if (getValueArray(pData, dataIndex, length, temp, count) && count == 2)
+        float temp;
+        if (getValue(pData, dataIndex, length, temp))
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
@@ -311,9 +351,8 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
 
     case Commands_AlarmHighTidalVolume:
     {
-        uint8_t* temp = nullptr;
-        uint8_t count = 0;
-        if (getValueArray(pData, dataIndex, length, temp, count) && count == 2)
+        float temp;
+        if (getValue(pData, dataIndex, length, temp))
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
@@ -322,9 +361,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
 
     case Commands_AlarmLowPressure:
     {
-        uint8_t* temp = nullptr;
-        uint8_t count = 0;
-        if (getValueArray(pData, dataIndex, length, temp, count) && count == 2)
+        if (getValue(pData, dataIndex, length, gConfiguration.fMinPressureLimit_mmH2O))
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
@@ -333,9 +370,16 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
 
     case Commands_AlarmHighPressure:
     {
-        uint8_t* temp = nullptr;
-        uint8_t count = 0;
-        if (getValueArray(pData, dataIndex, length, temp, count) && count == 2)
+        if (getValue(pData, dataIndex, length, gConfiguration.fMaxPressureLimit_mmH2O))
+            Serial.print(ReturnCommands[ReturnCommands_ACK]);
+        else
+            Serial.print(ReturnCommands[ReturnCommands_NACK]);
+    }
+    break;
+
+    case Commands_AlarmHighDeltaPressure:
+    {
+        if (getValue(pData, dataIndex, length, gConfiguration.fMaxPressureDelta_mmH2O))
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
@@ -344,9 +388,8 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
 
     case Commands_AlarmLowFio2Mix:
     {
-        uint8_t* temp = nullptr;
-        uint8_t count = 0;
-        if (getValueArray(pData, dataIndex, length, temp, count) && count == 2)
+        float temp;
+        if (getValue(pData, dataIndex, length, temp))
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
@@ -355,9 +398,8 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
 
     case Commands_AlarmHighFio2Mix:
     {
-        uint8_t* temp = nullptr;
-        uint8_t count = 0;
-        if (getValueArray(pData, dataIndex, length, temp, count) && count == 2)
+        float temp;
+        if (getValue(pData, dataIndex, length, temp))
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
@@ -366,9 +408,8 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
 
     case Commands_AlarmNonRebreathingValue:
     {
-        uint8_t* temp = nullptr;
-        uint8_t count = 0;
-        if (getValueArray(pData, dataIndex, length, temp, count) && count == 2)
+        float temp;
+        if (getValue(pData, dataIndex, length, temp))
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
@@ -377,6 +418,8 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
 
     case Commands_InitializePressureSensor:
     {
+        gConfiguration.nPressureSensorOffset[0] = gDataModel.nRawPressure[0];
+        gConfiguration.nPressureSensorOffset[1] = gDataModel.nRawPressure[1];
         Serial.print(ReturnCommands[ReturnCommands_ACK]);
     }
     break;
