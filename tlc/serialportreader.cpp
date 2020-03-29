@@ -1,6 +1,7 @@
 #include "serialportreader.h"
 
 #include "common.h"
+#include "configuration.h"
 #include "datamodel.h"
 
 namespace
@@ -163,7 +164,6 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
         }
     }
 
-    // TODO with more time we have to recheck this code which is super dependent on proper values.
     switch (commandIndex)
     {
     case Commands_Alive:
@@ -275,7 +275,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
         {
             if (temp >= 0.1f) // TODO
             {
-                gConfigurations.fMinBatteryLevel = temp;
+                gConfiguration.fMinBatteryLevel = temp;
                 Serial.print(ReturnCommands[ReturnCommands_ACK]);
             }
             else
@@ -289,7 +289,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
     case Commands_AlarmLowTidalVolume:
     {
         float temp;
-        if (getValueArray(pData, dataIndex, length, temp))
+        if (getValue(pData, dataIndex, length, temp))
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
@@ -299,7 +299,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
     case Commands_AlarmHighTidalVolume:
     {
         float temp;
-        if (getValueArray(pData, dataIndex, length, temp))
+        if (getValue(pData, dataIndex, length, temp))
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
@@ -308,7 +308,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
 
     case Commands_AlarmLowPressure:
     {
-        if (getValue(pData, dataIndex, length, gConfigurations.fMinPressureLimit_mmH2O))
+        if (getValue(pData, dataIndex, length, gConfiguration.fMinPressureLimit_mmH2O))
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
@@ -317,7 +317,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
 
     case Commands_AlarmHighPressure:
     {
-        if (getValue(pData, dataIndex, length, gConfigurations.fMaxPressureLimit_mmH2O))
+        if (getValue(pData, dataIndex, length, gConfiguration.fMaxPressureLimit_mmH2O))
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
@@ -326,7 +326,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
 
     case Commands_AlarmHighDeltaPressure:
     {
-        if (getValue(pData, dataIndex, length, gConfigurations.fMaxPressureDelta_mmH2O))
+        if (getValue(pData, dataIndex, length, gConfiguration.fMaxPressureDelta_mmH2O))
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
@@ -336,7 +336,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
     case Commands_AlarmLowFio2Mix:
     {
         float temp;
-        if (getValueArray(pData, dataIndex, length, temp))
+        if (getValue(pData, dataIndex, length, temp))
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
@@ -346,7 +346,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
     case Commands_AlarmHighFio2Mix:
     {
         float temp;
-        if (getValueArray(pData, dataIndex, length, temp))
+        if (getValue(pData, dataIndex, length, temp))
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
@@ -356,7 +356,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
     case Commands_AlarmNonRebreathingValue:
     {
         float temp;
-        if (getValueArray(pData, dataIndex, length, temp))
+        if (getValue(pData, dataIndex, length, temp))
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
