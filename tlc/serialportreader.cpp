@@ -91,7 +91,7 @@ namespace
     }
 
     template <typename T>
-    bool getValueArray(const uint8_t* pData, uint8_t& index, const uint8_t length, T*& value, uint8_t& count)
+    bool getValueArray(const uint8_t* pData, uint8_t& index, const uint8_t length, T*& value, int32_t& count)
     {
         value = nullptr;
 
@@ -105,30 +105,33 @@ namespace
             return false;
         }
 
+        if (count <= 0)
+        {
+            return false;
+        }
+
         if (index + (count * sizeof(T)) >= length)
         {
             return false;
         }
 
-        if (count > 0)
+        value = (T*)&gScratchBuffer[0];
+        if (count * sizeof(T) > kScratchBufferSize)
         {
-            value = (T*)&gScratchBuffer[0];
-            if (count * sizeof(T) > kScratchBufferSize)
+            value = nullptr;
+            return false;
+        }
+
+        memset(value, 0, sizeof(T) * count);
+        for (int32_t n = 0; n < count; ++n)
+        {
+            if (!getValue(pData, index, length, value[n]))
             {
                 value = nullptr;
                 return false;
             }
-
-            memset(value, 0, sizeof(T) * count);
-            for (uint8_t n = 0; n < count; ++n)
-            {
-                if (!getValue<T>(pData, index, length, value[n]))
-                {
-                    value = nullptr;
-                    return false;
-                }
-            }
         }
+
         return true;
     }
 }
@@ -189,7 +192,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
     break;
     case Command_Trigger:
     {
-        uint8_t temp = 0;
+        int32_t temp = 0;
         bool ok = getValue(pData, dataIndex, length, temp);
         if (ok)
             ok = temp < kTriggerMode_Count;
@@ -205,7 +208,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
 
     case Commands_Cycle:
     {
-        uint8_t temp = 0;
+        int32_t temp = 0;
         bool ok = getValue(pData, dataIndex, length, temp);
         if (ok)
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
@@ -217,7 +220,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
     case Commands_Fio:
     {
         float fio;
-        if (getValue(pData, dataIndex, length, fio))
+        if (getValue(pData, dataIndex, length, fio) && fio >= 20.0f && fio <= 100.0f)
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
@@ -238,6 +241,17 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
         if (ok) ok = getValue(pData, dataIndex, length, inhaleRatio);
         if (ok) ok = getValue(pData, dataIndex, length, exhaleRatio);
 
+        // Validate the inputs.
+        if (ok)
+        {
+            ok = (
+                inhaleMmH2O >= 0.0f && inhaleMmH2O <= 40.0f &&
+                exhaleMmH2O >= 0.0f && exhaleMmH2O <= 25.0f &&
+                inhaleRatio >= 1.0f && exhaleRatio >= 1.0f &&
+                breatheRate >= 6.0f && breatheRate <= 40.0f
+            );
+        }
+
         // MARTIN do your worst here!
 
         if (!ok)
@@ -249,9 +263,9 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
 
     case Commands_AlarmLowTidalVolume:
     {
-        uint8_t* temp = nullptr;
-        uint8_t count = 0;
-        if (getValueArray(pData, dataIndex, length, temp, count) && count == 2)
+        int32_t* temp = nullptr;
+        int32_t count = 0;
+        if (getValueArray(pData, dataIndex, length, temp, count) && count == 2 && temp )
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
@@ -260,8 +274,8 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
 
     case Commands_AlarmHighTidalVolume:
     {
-        uint8_t* temp = nullptr;
-        uint8_t count = 0;
+        int32_t* temp = nullptr;
+        int32_t count = 0;
         if (getValueArray(pData, dataIndex, length, temp, count) && count == 2)
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
@@ -271,8 +285,8 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
 
     case Commands_AlarmLowPressure:
     {
-        uint8_t* temp = nullptr;
-        uint8_t count = 0;
+        int32_t* temp = nullptr;
+        int32_t count = 0;
         if (getValueArray(pData, dataIndex, length, temp, count) && count == 2)
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
@@ -282,8 +296,8 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
 
     case Commands_AlarmHighPressure:
     {
-        uint8_t* temp = nullptr;
-        uint8_t count = 0;
+        int32_t* temp = nullptr;
+        int32_t count = 0;
         if (getValueArray(pData, dataIndex, length, temp, count) && count == 2)
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
@@ -293,8 +307,8 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
 
     case Commands_AlarmLowFio2Mix:
     {
-        uint8_t* temp = nullptr;
-        uint8_t count = 0;
+        int32_t* temp = nullptr;
+        int32_t count = 0;
         if (getValueArray(pData, dataIndex, length, temp, count) && count == 2)
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
@@ -304,8 +318,8 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
 
     case Commands_AlarmHighFio2Mix:
     {
-        uint8_t* temp = nullptr;
-        uint8_t count = 0;
+        int32_t* temp = nullptr;
+        int32_t count = 0;
         if (getValueArray(pData, dataIndex, length, temp, count) && count == 2)
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
@@ -315,10 +329,12 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
 
     case Commands_AlarmNonRebreathingValue:
     {
-        uint8_t* temp = nullptr;
-        uint8_t count = 0;
+        int32_t* temp = nullptr;
+        int32_t count = 0;
         if (getValueArray(pData, dataIndex, length, temp, count) && count == 2)
+        {
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
+        }
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
     }
