@@ -139,18 +139,33 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
         break;
     case Commands_Status:
     {
-        char buffer[1024] = { 0 };
-        sprintf_P(buffer, "PS1:%f,PS2:%f,RQP:%f,BAT:%f,PMP:%d,STA:%d,CTL:%d,TRG:%d,CYC:%d\r\n", 
-            gDataModel.fPressure_mmH2O[0],
-            gDataModel.fPressure_mmH2O[1],
-            gDataModel.fRequestPressure_mmH2O,
-            gDataModel.fBatteryLevel, 
-            static_cast<int>(gDataModel.nPWMPump),
-            static_cast<int>(gDataModel.nState),
-            static_cast<int>(gDataModel.nControlMode),
-            static_cast<int>(gDataModel.nTriggerMode),
-            static_cast<int>(gDataModel.nCycleState));
-        Serial.print(buffer);
+        char buffer[128] = { 0 };
+        char floatStr[8];
+        
+        dtostrf(gDataModel.fPressure_mmH2O[0],0, 5, floatStr);
+        floatStr[7] = '\0';
+        Serial.print("PS1:"); Serial.print(floatStr); 
+        dtostrf(gDataModel.fPressure_mmH2O[1],0, 5, floatStr);
+        floatStr[7] = '\0';
+        Serial.print(",PS2:"); Serial.print(floatStr); 
+        dtostrf(gDataModel.fRequestPressure_mmH2O,0, 5, floatStr);
+        floatStr[7] = '\0';
+        Serial.print(",RPQ:"); Serial.print(floatStr); 
+        dtostrf(gDataModel.fBatteryLevel,0, 5, floatStr);
+        floatStr[7] = '\0';
+        Serial.print(",BAT:"); Serial.print(floatStr); 
+
+        itoa(static_cast<int>(gDataModel.nPWMPump), buffer, 10);
+        Serial.print(",PMP:"); Serial.print(buffer); 
+        itoa(static_cast<int>(gDataModel.nState), buffer, 10);
+        Serial.print(",STA:"); Serial.print(buffer); 
+        itoa(static_cast<int>(gDataModel.nControlMode), buffer, 10);
+        Serial.print(",CTL:"); Serial.print(buffer); 
+        itoa(static_cast<int>(gDataModel.nTriggerMode), buffer, 10);
+        Serial.print(",TRG:"); Serial.print(buffer); 
+        itoa(static_cast<int>(gDataModel.nCycleState), buffer, 10);
+        Serial.print(",CYC:"); Serial.print(buffer); 
+        Serial.print("\r\n");
     }
     break;
     case Commands_Trigger:
@@ -264,7 +279,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
     {
         uint8_t* inhalePsi = nullptr;
         uint8_t count = 0;
-        if (getValueArray(pData, dataIndex, length, inhalePsi, count))
+        if (getValueArray(pData, dataIndex, length, inhalePsi, count) && count == 2)
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
@@ -276,7 +291,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
     {
         uint8_t* psi = nullptr;
         uint8_t count = 0;
-        if (getValueArray(pData, dataIndex, length, psi, count))
+        if (getValueArray(pData, dataIndex, length, psi, count) && count == 2)
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
@@ -288,7 +303,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
     {
         uint8_t* o2mix = nullptr;
         uint8_t count = 0;
-        if (getValueArray(pData, dataIndex, length, o2mix, count))
+        if (getValueArray(pData, dataIndex, length, o2mix, count) && count == 2)
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
