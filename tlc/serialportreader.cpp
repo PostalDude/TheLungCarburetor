@@ -50,19 +50,19 @@ namespace
     const char* ReturnCommands[] = {
         "ACK\r\n",
         "NACK\r\n",
-        "NACK\r\n" // in case someone uses the count item... 
+        "NACK\r\n" // in case someone uses the count item...
     };
 
-	// Scratch Buffer to work on Array parsing
-	enum eConsts
-	{
-		kCommandSize		= 3,
-		kScratchBufferSize 	= 128,
-		kParseBufferSize	= 24
-	};
-	static uint8_t gScratchBuffer[kScratchBufferSize];
-	static char    gParseBuffer[kParseBufferSize];
-	
+    // Scratch Buffer to work on Array parsing
+    enum eConsts
+    {
+        kCommandSize        = 3,
+        kScratchBufferSize  = 128,
+        kParseBufferSize    = 24
+    };
+    static uint8_t gScratchBuffer[kScratchBufferSize];
+    static char    gParseBuffer[kParseBufferSize];
+
 
     template <typename T>
     bool getValue(const uint8_t* pData, uint8_t& index, const uint8_t length, T& value)
@@ -103,13 +103,13 @@ namespace
 
         if (count > 0)
         {
-			value = (T*)&gScratchBuffer[0];
-			if (count * sizeof(T) > kScratchBufferSize)
-			{
-				value = nullptr;
-				return false;
-			}
-			
+            value = (T*)&gScratchBuffer[0];
+            if (count * sizeof(T) > kScratchBufferSize)
+            {
+                value = nullptr;
+                return false;
+            }
+
             memset(value, 0, sizeof(T) * count);
             for (uint8_t n = 0; n < count; ++n)
             {
@@ -131,12 +131,12 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
 
     // First bytes is the command
     if (length < kCommandSize)
-	{
+    {
         return false;
-	}
+    }
 
     uint8_t command[kCommandSize + 1] = { pData[dataIndex++], pData[dataIndex++], pData[dataIndex++], '\0' };
-    
+
     uint8_t commandIndex = 0;
     for (commandIndex = 1; commandIndex < Commands_Count; ++commandIndex)
     {
@@ -153,43 +153,43 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
     case Commands_Alive:
         Serial.print(ReturnCommands[ReturnCommands_ACK]);
         break;
-		
+
     case Commands_Status:
     {
         char floatStr[8];
-        
+
         dtostrf(gDataModel.fPressure_mmH2O[0],0, 5, floatStr);
         floatStr[7] = '\0';
-        Serial.print("PS1:"); Serial.print(floatStr); 
+        Serial.print("PS1:"); Serial.print(floatStr);
         dtostrf(gDataModel.fPressure_mmH2O[1],0, 5, floatStr);
         floatStr[7] = '\0';
-        Serial.print(",PS2:"); Serial.print(floatStr); 
+        Serial.print(",PS2:"); Serial.print(floatStr);
         dtostrf(gDataModel.fRequestPressure_mmH2O,0, 5, floatStr);
         floatStr[7] = '\0';
-        Serial.print(",RPQ:"); Serial.print(floatStr); 
+        Serial.print(",RPQ:"); Serial.print(floatStr);
         dtostrf(gDataModel.fBatteryLevel,0, 5, floatStr);
         floatStr[7] = '\0';
-        Serial.print(",BAT:"); Serial.print(floatStr); 
+        Serial.print(",BAT:"); Serial.print(floatStr);
 
         itoa(static_cast<int>(gDataModel.nPWMPump), gParseBuffer, 10);
-        Serial.print(",PMP:"); Serial.print(gParseBuffer); 
+        Serial.print(",PMP:"); Serial.print(gParseBuffer);
         itoa(static_cast<int>(gDataModel.nState), gParseBuffer, 10);
-        Serial.print(",STA:"); Serial.print(gParseBuffer); 
+        Serial.print(",STA:"); Serial.print(gParseBuffer);
         itoa(static_cast<int>(gDataModel.nControlMode), gParseBuffer, 10);
-        Serial.print(",CTL:"); Serial.print(gParseBuffer); 
+        Serial.print(",CTL:"); Serial.print(gParseBuffer);
         itoa(static_cast<int>(gDataModel.nTriggerMode), gParseBuffer, 10);
-        Serial.print(",TRG:"); Serial.print(gParseBuffer); 
+        Serial.print(",TRG:"); Serial.print(gParseBuffer);
         itoa(static_cast<int>(gDataModel.nCycleState), gParseBuffer, 10);
-        Serial.print(",CYC:"); Serial.print(gParseBuffer); 
+        Serial.print(",CYC:"); Serial.print(gParseBuffer);
         Serial.print("\r\n");
     }
     break;
-	
+
     case Commands_Trigger:
     {
         uint8_t temp = 0;
         bool ok = getValue(pData, dataIndex, length, temp);
-        if (ok)        
+        if (ok)
             ok = temp < kTriggerMode_Count;
         if (ok)
         {
@@ -200,7 +200,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
     }
     break;
-	
+
     case Commands_Fio:
     {
         uint8_t fio;
@@ -210,7 +210,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
     }
     break;
-	
+
     case Commands_Curve:
     {
         float breatheRate = 0.0f;
@@ -250,7 +250,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
         // Should we add warnings here?
         ok = inhaleCountMM == inhaleCountTime && exhaleCountMM == exhaleCountTime &&
              inhaleCountMM > 0 && exhaleCountMM > 0 && inhaleCountMM < kMaxCurveCount && exhaleCountMM < kMaxCurveCount;
-        
+
         if (ok)
         {
             gDataModel.nRespirationPerMinute = static_cast<uint8_t>(breatheRate);
@@ -260,13 +260,13 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
             {
                 gDataModel.pInhaleCurve.fSetPoint_mmH2O[n] = inhaleCurveMM[n];
                 if (gDataModel.nRespirationPerMinute != 0)
-				{
-					gDataModel.pInhaleCurve.nSetPoint_TickMs[n] = static_cast<uint32_t>(inhaleCurveTime[n] * (1.0f / gDataModel.nRespirationPerMinute) * 1000);
-				}
-				else
-				{
-					ok = false;
-				}
+                {
+                    gDataModel.pInhaleCurve.nSetPoint_TickMs[n] = static_cast<uint32_t>(inhaleCurveTime[n] * (1.0f / gDataModel.nRespirationPerMinute) * 1000);
+                }
+                else
+                {
+                    ok = false;
+                }
             }
 
             gDataModel.pExhaleCurve.nCount = exhaleCountMM;
@@ -274,23 +274,23 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
             {
                 gDataModel.pExhaleCurve.fSetPoint_mmH2O[n] = exhaleCurveMM[n];
                 if (gDataModel.nRespirationPerMinute != 0)
-				{
-					gDataModel.pExhaleCurve.nSetPoint_TickMs[n] = static_cast<uint32_t>(exhaleCurveTime[n] * (1.0f / gDataModel.nRespirationPerMinute) * 1000);
-				}
-				else
-				{
-					ok = false;
-				}
+                {
+                    gDataModel.pExhaleCurve.nSetPoint_TickMs[n] = static_cast<uint32_t>(exhaleCurveTime[n] * (1.0f / gDataModel.nRespirationPerMinute) * 1000);
+                }
+                else
+                {
+                    ok = false;
+                }
             }
         }
-        
+
         if (!ok)
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
         else
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
     }
     break;
-	
+
     case Commands_InhalePsi:
     {
         uint8_t inhalePsi;
@@ -300,7 +300,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
     }
     break;
-	
+
     case Commands_ExhalePsi:
     {
         uint8_t exhalePsi;
@@ -310,7 +310,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
     }
     break;
-	
+
     case Commands_AlarmAirFlow:
     {
         uint8_t* inhalePsi = nullptr;
@@ -318,10 +318,10 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
         if (getValueArray(pData, dataIndex, length, inhalePsi, count) && count == 2)
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
-            Serial.print(ReturnCommands[ReturnCommands_NACK]);        
+            Serial.print(ReturnCommands[ReturnCommands_NACK]);
     }
     break;
-	
+
     case Commands_AlarmPsi:
     {
         uint8_t* psi = nullptr;
@@ -332,7 +332,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
     }
     break;
-	
+
     case Commands_AlarmO2Mix:
     {
         uint8_t* o2mix = nullptr;
@@ -343,7 +343,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
     }
     break;
-	
+
     case Commands_AlarmRebreathing:
     {
         uint8_t rebreathing;
@@ -353,7 +353,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
     }
     break;
-	
+
     case Commands_SetZeroPsi:
     {
         uint8_t zeropsi;
@@ -363,7 +363,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
     }
     break;
-	
+
     default:
         Serial.print(ReturnCommands[ReturnCommands_NACK]);
         break;

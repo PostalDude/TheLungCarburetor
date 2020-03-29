@@ -51,7 +51,7 @@ void Communications_Process()
             {
                 count = kRxBufferSize-1;
             }
-            
+
             Serial.readBytes(&gRxBuffer.data[ofs], count-ofs);
 
             // Scan for crlf

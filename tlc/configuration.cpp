@@ -13,7 +13,7 @@ bool Configuration_Init()
     bool bValid = true;
     Configuration_SetDefaults();
 
-#else 
+#else
     bool bValid = Configuration_Read();
     if (!bValid)
     {
@@ -59,8 +59,8 @@ static uint32_t CRC32(uint8_t* pBuffer, int len)
 bool Configuration_SetDefaults()
 {
     gConfiguration.nVersion                 = kEEPROM_Version;
-    gConfiguration.fMinBatteryLevel			= 10.0f;
-	gConfiguration.nPressureSensorOffset[0] = 0;
+    gConfiguration.fMinBatteryLevel         = 10.0f;
+    gConfiguration.nPressureSensorOffset[0] = 0;
     gConfiguration.nPressureSensorOffset[1] = 0;
     gConfiguration.fMaxPressureLimit_mmH2O  = kMPX5010_MaxPressure_mmH2O;
     gConfiguration.fMinPressureLimit_mmH2O  = -kMPX5010_MaxPressure_mmH2O;

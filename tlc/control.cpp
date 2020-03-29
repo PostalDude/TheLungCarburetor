@@ -15,8 +15,8 @@ bool Control_Init()
     Timer1.initialize(4000);         // initialize timer1, and set a 4000us period
     Timer1.pwm(PIN_OUT_PUMP1_PWM, 0);                // setup pwm on pin 9, 50% duty cycle  ( 0 to 1000)
 
-	gDataModel.bStartFlag = false;
-	
+    gDataModel.bStartFlag = false;
+
     return true;
 }
 
@@ -284,11 +284,11 @@ static bool ComputeRespirationSetPoint()
 void Control_Process()
 {
     if (!gDataModel.bStartFlag || gDataModel.nState != kState_Process)
-    {        
+    {
         gDataModel.nCycleState = kCycleState_WaitTrigger;
-		exhaleValveServo.write(gConfiguration.nServoExhaleOpenAngle);
-		gDataModel.nTickRespiration = millis(); // Respiration cycle start tick. Used to compute 
-        Timer1.pwm(PIN_OUT_PUMP1_PWM, gDataModel.nPWMPump);		
+        exhaleValveServo.write(gConfiguration.nServoExhaleOpenAngle);
+        gDataModel.nTickRespiration = millis(); // Respiration cycle start tick. Used to compute
+        Timer1.pwm(PIN_OUT_PUMP1_PWM, gDataModel.nPWMPump);
         return;
     }
 

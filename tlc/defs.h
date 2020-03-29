@@ -71,11 +71,11 @@ enum eTriggerMode
 
 enum eAlarm
 {
-	kAlarm_MaxPressureLimit 			= (1<<0),
-	kAlarm_MinPressureLimit 			= (1<<1),
-	kAlarm_PressureSensorRedudancyFail	= (1<<2),
-	kAlarm_InvalidConfiguration			= (1<<3),
-	kAlarm_BatteryLow					= (1<<4),
+    kAlarm_MaxPressureLimit             = (1<<0),
+    kAlarm_MinPressureLimit             = (1<<1),
+    kAlarm_PressureSensorRedudancyFail  = (1<<2),
+    kAlarm_InvalidConfiguration         = (1<<3),
+    kAlarm_BatteryLow                   = (1<<4),
 };
 
 

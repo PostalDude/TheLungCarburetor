@@ -3,7 +3,7 @@
 #include "configuration.h"
 #include "lcd_keypad.h"
 
-#define AUTO_PRESSURE_CALIB_AT_BOOT 	0
+#define AUTO_PRESSURE_CALIB_AT_BOOT     0
 
 // Initialize sensor devices
 bool Sensors_Init()

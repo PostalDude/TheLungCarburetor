@@ -8,8 +8,8 @@ struct tConfiguration
 {
     uint8_t     nVersion;                   // Configuration structure version
     uint16_t    nPressureSensorOffset[0];   // Offset when pressure sensor is at atmosphere readings
-    float		fMinBatteryLevel;			// Minimum battery level for alarm
-	float       fMaxPressureLimit_mmH2O;    // Max allowed pressure limit
+    float       fMinBatteryLevel;           // Minimum battery level for alarm
+    float       fMaxPressureLimit_mmH2O;    // Max allowed pressure limit
     float       fMinPressureLimit_mmH2O;    // Min allowed pressure limit
     float       fMaxPressureDelta_mmH2O;    // Maximum allowed pressure delta between redundant readings
     float       fGainP;                     // Control gain P
