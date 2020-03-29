@@ -15,10 +15,12 @@ namespace
         Commands_Cycle,
         Commands_Fio,
         Commands_Curve,
+        Commands_AlarmMinBatteryLevel, // TODO
         Commands_AlarmLowTidalVolume,
         Commands_AlarmHighTidalVolume,
         Commands_AlarmLowPressure,
         Commands_AlarmHighPressure,
+        Commands_AlarmHighDeltaPressure,
         Commands_AlarmLowFio2Mix,
         Commands_AlarmHighFio2Mix,
         Commands_AlarmNonRebreathingValue,
@@ -36,10 +38,12 @@ namespace
         "CYC",
         "FIO",
         "CUR",
+        "MBL",
         "ALT",
         "AHT",
         "ALP",
         "AHP",
+        "ADP",
         "ALF",
         "AHF",
         "ANR",
@@ -211,7 +215,10 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
         int32_t temp = 0;
         bool ok = getValue(pData, dataIndex, length, temp);
         if (ok)
+        {
+            gDataModel.bStartFlag = temp != 0;
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
+        }
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
     }
@@ -261,11 +268,28 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
     }
     break;
 
+    case Commands_AlarmMinBatteryLevel:
+    {
+        float temp;
+        if (getValue(pData, dataIndex, length, temp))
+        {
+            if (temp >= 0.1f) // TODO
+            {
+                gConfigurations.fMinBatteryLevel = temp;
+                Serial.print(ReturnCommands[ReturnCommands_ACK]);
+            }
+            else
+                Serial.print(ReturnCommands[ReturnCommands_NACK]);
+        }
+        else
+            Serial.print(ReturnCommands[ReturnCommands_NACK]);
+    }
+    break;
+
     case Commands_AlarmLowTidalVolume:
     {
-        int32_t* temp = nullptr;
-        int32_t count = 0;
-        if (getValueArray(pData, dataIndex, length, temp, count) && count == 2 && temp )
+        float temp;
+        if (getValueArray(pData, dataIndex, length, temp))
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
@@ -274,9 +298,8 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
 
     case Commands_AlarmHighTidalVolume:
     {
-        int32_t* temp = nullptr;
-        int32_t count = 0;
-        if (getValueArray(pData, dataIndex, length, temp, count) && count == 2)
+        float temp;
+        if (getValueArray(pData, dataIndex, length, temp))
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
@@ -285,9 +308,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
 
     case Commands_AlarmLowPressure:
     {
-        int32_t* temp = nullptr;
-        int32_t count = 0;
-        if (getValueArray(pData, dataIndex, length, temp, count) && count == 2)
+        if (getValue(pData, dataIndex, length, gConfigurations.fMinPressureLimit_mmH2O))
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
@@ -296,9 +317,16 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
 
     case Commands_AlarmHighPressure:
     {
-        int32_t* temp = nullptr;
-        int32_t count = 0;
-        if (getValueArray(pData, dataIndex, length, temp, count) && count == 2)
+        if (getValue(pData, dataIndex, length, gConfigurations.fMaxPressureLimit_mmH2O))
+            Serial.print(ReturnCommands[ReturnCommands_ACK]);
+        else
+            Serial.print(ReturnCommands[ReturnCommands_NACK]);
+    }
+    break;
+
+    case Commands_AlarmHighDeltaPressure:
+    {
+        if (getValue(pData, dataIndex, length, gConfigurations.fMaxPressureDelta_mmH2O))
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
@@ -307,9 +335,8 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
 
     case Commands_AlarmLowFio2Mix:
     {
-        int32_t* temp = nullptr;
-        int32_t count = 0;
-        if (getValueArray(pData, dataIndex, length, temp, count) && count == 2)
+        float temp;
+        if (getValueArray(pData, dataIndex, length, temp))
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
@@ -318,9 +345,8 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
 
     case Commands_AlarmHighFio2Mix:
     {
-        int32_t* temp = nullptr;
-        int32_t count = 0;
-        if (getValueArray(pData, dataIndex, length, temp, count) && count == 2)
+        float temp;
+        if (getValueArray(pData, dataIndex, length, temp))
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
@@ -329,12 +355,9 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
 
     case Commands_AlarmNonRebreathingValue:
     {
-        int32_t* temp = nullptr;
-        int32_t count = 0;
-        if (getValueArray(pData, dataIndex, length, temp, count) && count == 2)
-        {
+        float temp;
+        if (getValueArray(pData, dataIndex, length, temp))
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
-        }
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
     }
@@ -342,6 +365,8 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
 
     case Commands_InitializePressureSensor:
     {
+        gConfiguration.nPressureSensorOffset[0] = gDataModel.nRawPressure[0];
+        gConfiguration.nPressureSensorOffset[1] = gDataModel.nRawPressure[1];
         Serial.print(ReturnCommands[ReturnCommands_ACK]);
     }
     break;
