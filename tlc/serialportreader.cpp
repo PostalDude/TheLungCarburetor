@@ -163,7 +163,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
         Serial.print(ReturnCommands[ReturnCommands_ACK]);
         break;
 
-    case Commands_Status:
+    case Commands_Status: 
     {
         dtostrf(gDataModel.fPressure_mmH2O[0],0, 5, gParseBuffer);
         Serial.print("PS1:"); Serial.print(gParseBuffer);
@@ -227,75 +227,18 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
     case Commands_Curve:
     {
         float breatheRate = 0.0f;
-        float* inhaleCurveMM = nullptr;
-        float* exhaleCurveMM = nullptr;
-        float* inhaleCurveTime = nullptr;
-        float* exhaleCurveTime = nullptr;
-        uint8_t inhaleCountMM = 0;
-        uint8_t exhaleCountMM = 0;
-        uint8_t inhaleCountTime = 0;
-        uint8_t exhaleCountTime = 0;
-
-        // breathe rate
+        float inhaleMmH2O = 0.0f;
+        float exhaleMmH2O = 0.0f;
+        float inhaleRatio = 0.0f;
+        float exhaleRatio = 0.0f;
+        
         bool ok = getValue(pData, dataIndex, length, breatheRate);
+        if (ok) ok = getValue(pData, dataIndex, length, inhaleMmH2O);
+        if (ok) ok = getValue(pData, dataIndex, length, exhaleMmH2O);
+        if (ok) ok = getValue(pData, dataIndex, length, inhaleRatio);
+        if (ok) ok = getValue(pData, dataIndex, length, exhaleRatio);
 
-        // Inhale
-        if (ok)
-        {
-            ok = getValueArray(pData, dataIndex, length, inhaleCurveMM, inhaleCountMM);
-        }
-        if (ok)
-        {
-            ok = getValueArray(pData, dataIndex, length, inhaleCurveTime, inhaleCountTime);
-        }
-
-        // Exhale
-        if (ok)
-        {
-            ok = getValueArray(pData, dataIndex, length, exhaleCurveMM, exhaleCountMM);
-        }
-        if (ok)
-        {
-            ok = getValueArray(pData, dataIndex, length, exhaleCurveTime, exhaleCountTime);
-        }
-
-        // TODO what should be the minimum amount of points in the curve?
-        // Should we add warnings here?
-        ok = inhaleCountMM == inhaleCountTime && exhaleCountMM == exhaleCountTime &&
-             inhaleCountMM > 0 && exhaleCountMM > 0 && inhaleCountMM < kMaxCurveCount && exhaleCountMM < kMaxCurveCount;
-
-        if (ok)
-        {
-            gDataModel.nRespirationPerMinute = static_cast<uint8_t>(breatheRate);
-
-            gDataModel.pInhaleCurve.nCount = inhaleCountMM;
-            for (uint8_t n = 0; n < inhaleCountMM; ++n)
-            {
-                gDataModel.pInhaleCurve.fSetPoint_mmH2O[n] = inhaleCurveMM[n];
-                if (gDataModel.nRespirationPerMinute != 0)
-                {
-                    gDataModel.pInhaleCurve.nSetPoint_TickMs[n] = static_cast<uint32_t>(inhaleCurveTime[n] * (1.0f / gDataModel.nRespirationPerMinute) * 1000);
-                }
-                else
-                {
-                    ok = false;
-                }
-            }
-
-            gDataModel.pExhaleCurve.nCount = exhaleCountMM;
-            for (uint8_t n = 0; n < exhaleCountMM; ++n)
-            {
-                gDataModel.pExhaleCurve.fSetPoint_mmH2O[n] = exhaleCurveMM[n];
-                if (gDataModel.nRespirationPerMinute != 0)
-                {
-                    gDataModel.pExhaleCurve.nSetPoint_TickMs[n] = static_cast<uint32_t>(exhaleCurveTime[n] * (1.0f / gDataModel.nRespirationPerMinute) * 1000);
-                }
-                else
-                {
-                    ok = false;
-                }
-            }
-        }
+        // MARTIN do your worst here!
 
         if (!ok)
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
