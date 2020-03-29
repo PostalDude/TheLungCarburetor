@@ -3,7 +3,6 @@
 #include "serialportreader.h"
 
 static bool     gSerialConnected    = false;
-static uint32_t gTickPublish        = 0;
 
 struct tRxBuffer
 {
@@ -17,7 +16,6 @@ static tRxBuffer gRxBuffer;
 bool Communications_Init()
 {
     gSerialConnected        = false;
-    gTickPublish            = millis();
 
     gRxBuffer.rxSize        = 0;
     gRxBuffer.lastRxTick    = millis();
@@ -26,7 +24,6 @@ bool Communications_Init()
 
     return true;
 }
-
 
 void Communications_Process()
 {

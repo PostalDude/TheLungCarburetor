@@ -8,7 +8,8 @@ struct tConfiguration
 {
     uint8_t     nVersion;                   // Configuration structure version
     uint16_t    nPressureSensorOffset[0];   // Offset when pressure sensor is at atmosphere readings
-    float       fMaxPressureLimit_mmH2O;    // Max allowed pressure limit
+    float		fMinBatteryLevel;			// Minimum battery level for alarm
+	float       fMaxPressureLimit_mmH2O;    // Max allowed pressure limit
     float       fMinPressureLimit_mmH2O;    // Min allowed pressure limit
     float       fMaxPressureDelta_mmH2O;    // Maximum allowed pressure delta between redundant readings
     float       fGainP;                     // Control gain P
@@ -18,8 +19,8 @@ struct tConfiguration
     float       fPILimit;                   // Proportional+Integral error limit
     float       fControlTransfer;           // Control transfer from adjusted errors to pwm
     float       fPatientTrigger_mmH2O;      // Patient triggers respiration when this value is reached (In TriggerMode Patient or semi automatic)
-    uint8_t     nServoExhaleOpenAngle;      // Angle in degree (0..180) when exhale servo valve is open
-    uint8_t     nServoExhaleCloseAngle;     // Angle in degree (0..180) when exhale servo valve is close
+    uint16_t    nServoExhaleOpenAngle;      // Angle in degree (0..180) when exhale servo valve is open
+    uint16_t    nServoExhaleCloseAngle;     // Angle in degree (0..180) when exhale servo valve is close
     uint32_t    nCRC;                       // Configuration CRC check
 };
 extern tConfiguration gConfiguration;
@@ -28,6 +29,7 @@ extern tConfiguration gConfiguration;
 HXCOMPILATIONASSERT(assertEEPROMSizeCheck, (sizeof(tConfiguration) <= 512));
 
 bool Configuration_Init();
+bool Configuration_SetDefaults();
 bool Configuration_Read();
 bool Configuration_Write();
 

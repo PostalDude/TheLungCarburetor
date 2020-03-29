@@ -15,6 +15,7 @@ struct tPressureCurve
 struct tDataModel
 {
     uint16_t		nSafetyFlags;			// Bitmask of safety alarm source eAlarm
+	bool			bStartFlag;				// If system is started, start respiration cycle
 	eState          nState;                 // System state
     eControlMode    nControlMode;           // Control mode of the pump
     eTriggerMode    nTriggerMode;           // Respiration trigger mode
@@ -35,13 +36,14 @@ struct tDataModel
     float           fI;                     // Control Integral
     float           fD;                     // Control Derivative
     float           fPI;                    // Control Sum of Proportional and Integral errors
-    uint8_t         nPWMPump;               // Pump PWM power output
+    uint16_t        nPWMPump;               // Pump PWM power output
 
     uint32_t        nTickControl;           // Last control tick
     uint32_t        nTickCommunications;    // Last communications tick
     uint32_t        nTickSensors;           // Last sensors tick
     uint32_t        nTickSetPoint;          // Current curve pressure set-point ticker
     uint32_t        nTickRespiration;       // Start of respiration tick
+    uint32_t        nTickStabilization;     // Stabilization tick between respiration
     uint32_t        nTickLcdKeypad;         // Lcd and Keypad update and scan rate
 };
 

@@ -1,5 +1,6 @@
 #include "configuration.h"
 #include <EEPROM.h>
+#include "lcd_keypad.h"
 
 tConfiguration gConfiguration;
 
@@ -7,7 +8,27 @@ tConfiguration gConfiguration;
 bool Configuration_Init()
 {
     memset(&gConfiguration, 0, sizeof(tConfiguration));
-    return Configuration_Read();
+
+#if 0 // Only use when debugging configuration
+    bool bValid = true;
+    Configuration_SetDefaults();
+
+#else 
+    bool bValid = Configuration_Read();
+    if (!bValid)
+    {
+        sprintf(gLcdMsg, "NVM Fail");
+        Configuration_SetDefaults();
+        Configuration_Write();
+    }
+    else
+    {
+        sprintf(gLcdMsg, "NVM Success");
+
+    }
+#endif
+
+    return bValid;
 }
 
 //
@@ -33,6 +54,29 @@ static uint32_t CRC32(uint8_t* pBuffer, int len)
     }
 
     return crc;
+}
+
+bool Configuration_SetDefaults()
+{
+    gConfiguration.nVersion                 = kEEPROM_Version;
+    gConfiguration.fMinBatteryLevel			= 10.0f;
+	gConfiguration.nPressureSensorOffset[0] = 0;
+    gConfiguration.nPressureSensorOffset[1] = 0;
+    gConfiguration.fMaxPressureLimit_mmH2O  = kMPX5010_MaxPressure_mmH2O;
+    gConfiguration.fMinPressureLimit_mmH2O  = -kMPX5010_MaxPressure_mmH2O;
+    gConfiguration.fMaxPressureDelta_mmH2O  = kMPX5010_MaxPressureDelta_mmH2O;
+    gConfiguration.fGainP                   = 250.5f;
+    gConfiguration.fGainI                   = 0.01f;
+    gConfiguration.fGainD                   = 0.0000f;
+    gConfiguration.fILimit                  = 5.0f;
+    gConfiguration.fPILimit                 = 1000.0f;
+    gConfiguration.fControlTransfer         = 1.0f;
+    gConfiguration.fPatientTrigger_mmH2O    = 40.0f;
+    gConfiguration.nServoExhaleOpenAngle    = 2270;
+    gConfiguration.nServoExhaleCloseAngle   = 750;
+    gConfiguration.nCRC                     = 0; // Clear CRC for computation
+
+    return true;
 }
 
 // Read configuration from EEPROM, returns false if bad CRC or eeprom version
