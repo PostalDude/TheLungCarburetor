@@ -24,13 +24,12 @@ public:
     void SetMaximumPressure( const float pMax);
     void SetMinimumPressure( const float pMin);
 
+    
     const float EvalProfile( const float t); //Evaluate pressure at instant t
     void CalcTimeStamps(); //Recompute after setting cycle time or ratio
     void CalcSlopes(); //Recompute after setting  any value
-protected:
-    //Utils
-    float Parts2Ratio(float part1, float part2);
-
+    void Revalidate(); //Validates all members and sets m_bIsValid back to true if valid
+    
 
 
 protected:

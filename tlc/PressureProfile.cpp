@@ -49,9 +49,7 @@ void PressureProfile::SetInhaleRatio(const float ratio)
     {
         std::cout << "Inhale ratio must be strictly between 0 and 1" << std::endl;
         m_bIsValid = false; 
-    }
-    
-    
+    }   
 }
 
 void PressureProfile::SetInhaleExhaleProporitions(const float inhalePart, const float exhalePart)
@@ -140,4 +138,12 @@ const float PressureProfile::EvalProfile(const float t)
         return EvalProfile(newTime);
     }
     
+}
+
+void PressureProfile::Revalidate()
+{
+    m_bIsValid = m_fCycleTime > 0;
+    m_bIsValid = m_bIsValid && ((m_fInhaleRatio>0) && (m_fInhaleRatio <1));
+    m_bIsValid = m_bIsValid && (m_fPmin > 0);
+    m_bIsValid = m_bIsValid && (m_fPmax > m_fPmin);
 }
