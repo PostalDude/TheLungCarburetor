@@ -156,20 +156,14 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
 
     case Commands_Status:
     {
-        char floatStr[8];
-
-        dtostrf(gDataModel.fPressure_mmH2O[0],0, 5, floatStr);
-        floatStr[7] = '\0';
-        Serial.print("PS1:"); Serial.print(floatStr);
-        dtostrf(gDataModel.fPressure_mmH2O[1],0, 5, floatStr);
-        floatStr[7] = '\0';
-        Serial.print(",PS2:"); Serial.print(floatStr);
-        dtostrf(gDataModel.fRequestPressure_mmH2O,0, 5, floatStr);
-        floatStr[7] = '\0';
-        Serial.print(",RPQ:"); Serial.print(floatStr);
-        dtostrf(gDataModel.fBatteryLevel,0, 5, floatStr);
-        floatStr[7] = '\0';
-        Serial.print(",BAT:"); Serial.print(floatStr);
+        dtostrf(gDataModel.fPressure_mmH2O[0],0, 5, gParseBuffer);
+        Serial.print("PS1:"); Serial.print(gParseBuffer);
+        dtostrf(gDataModel.fPressure_mmH2O[1],0, 5, gParseBuffer);
+        Serial.print(",PS2:"); Serial.print(gParseBuffer);
+        dtostrf(gDataModel.fRequestPressure_mmH2O,0, 5, gParseBuffer);
+        Serial.print(",RPQ:"); Serial.print(gParseBuffer);
+        dtostrf(gDataModel.fBatteryLevel,0, 5, gParseBuffer);
+        Serial.print(",BAT:"); Serial.print(gParseBuffer);
 
         itoa(static_cast<int>(gDataModel.nPWMPump), gParseBuffer, 10);
         Serial.print(",PMP:"); Serial.print(gParseBuffer);
