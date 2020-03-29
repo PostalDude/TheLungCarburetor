@@ -9,11 +9,11 @@ bool Configuration_Init()
 {
     memset(&gConfiguration, 0, sizeof(tConfiguration));
 
-#if 1 //*** Remove me when you will use eeprom settings
+#if 0 // Only use when debugging configuration
     bool bValid = true;
     Configuration_SetDefaults();
 
-#else //*** Put me back for normal setup
+#else 
     bool bValid = Configuration_Read();
     if (!bValid)
     {
@@ -59,7 +59,8 @@ static uint32_t CRC32(uint8_t* pBuffer, int len)
 bool Configuration_SetDefaults()
 {
     gConfiguration.nVersion                 = kEEPROM_Version;
-    gConfiguration.nPressureSensorOffset[0] = 0;
+    gConfiguration.fMinBatteryLevel			= 10.0f;
+	gConfiguration.nPressureSensorOffset[0] = 0;
     gConfiguration.nPressureSensorOffset[1] = 0;
     gConfiguration.fMaxPressureLimit_mmH2O  = kMPX5010_MaxPressure_mmH2O;
     gConfiguration.fMinPressureLimit_mmH2O  = -kMPX5010_MaxPressure_mmH2O;

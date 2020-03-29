@@ -16,7 +16,8 @@ bool Safeties_Init()
 
 void Safeties_Clear()
 {
-    gSafeties.bCritical = false;
+	gSafeties.bCritical             = false;
+    gDataModel.nSafetyFlags 		= 0;	
 }
 
 bool Safeties_Enable()
@@ -40,21 +41,40 @@ void Safeties_Process()
     }
 
     // If any safety issue, set bCritical in global safeties structure
- #if 0 //*** Put me back in normal operation to enable safeties
     if (gSafeties.bEnabled)
     {
         float fPressureDelta = gDataModel.fPressure_mmH2O[0] - gDataModel.fPressure_mmH2O[1];
 
-        if (gSafeties.bConfigurationInvalid                                         ||
-            gSafeties.bCritical                                                     ||
-            gDataModel.fPressure_mmH2O[0] >= gConfiguration.fMaxPressureLimit_mmH2O ||
-            gDataModel.fPressure_mmH2O[1] <= gConfiguration.fMinPressureLimit_mmH2O ||
-            fabs(fPressureDelta)          >= gConfiguration.fMaxPressureDelta_mmH2O)
+		gDataModel.nSafetyFlags = 0;
+        if (gDataModel.fPressure_mmH2O[0] >= gConfiguration.fMaxPressureLimit_mmH2O)
+		{
+			gDataModel.nSafetyFlags |= kAlarm_MaxPressureLimit;
+		}
+		
+        if (gDataModel.fPressure_mmH2O[1] <= gConfiguration.fMinPressureLimit_mmH2O)
+		{
+			gDataModel.nSafetyFlags |= kAlarm_MinPressureLimit;
+		}
+		
+        if (fabs(fPressureDelta) >= gConfiguration.fMaxPressureDelta_mmH2O)
+		{
+			gDataModel.nSafetyFlags |= kAlarm_PressureSensorRedudancyFail;
+		}
+		
+        if (gSafeties.bConfigurationInvalid)
+		{
+			gDataModel.nSafetyFlags |= kAlarm_InvalidConfiguration;
+		}
+		
+		if (gDataModel.fBatteryLevel < gConfiguration.fMinBatteryLevel)
+		{
+			gDataModel.nSafetyFlags |= kAlarm_BatteryLow;
+		}
+
+		if (gDataModel.nSafetyFlags != 0)
         {
-            gSafeties.bCritical = true;
-            gDataModel.nState   = kState_Error;
+			gSafeties.bCritical 	= true;
+            gDataModel.nState   	= kState_Error;
         }
     }
-#endif
-
 }

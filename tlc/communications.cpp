@@ -1,10 +1,8 @@
 #include "communications.h"
 #include "datamodel.h"
+#include "serialportreader.h"
 
 static bool     gSerialConnected    = false;
-static uint32_t gTickPublish        = 0;
-static uint8_t  gMsgTxID            = 0;
-static bool     gSendMsg            = false;
 
 struct tRxBuffer
 {
@@ -18,20 +16,12 @@ static tRxBuffer gRxBuffer;
 bool Communications_Init()
 {
     gSerialConnected        = false;
-    gTickPublish            = millis();
 
     gRxBuffer.rxSize        = 0;
     gRxBuffer.lastRxTick    = millis();
 
     Serial.begin(kSerialBaudRate);
 
-    return true;
-}
-
-static bool ParseCommand(uint8_t* pData, uint8_t length)
-{
-    (void)pData;
-    (void)length;
     return true;
 }
 
@@ -48,54 +38,6 @@ void Communications_Process()
     }
     else
     {
-        if(gSendMsg)
-        {
-            //*** Needs profiling
-            // Send only one message
-            switch(gMsgTxID)
-            {
-              case 0:
-                Serial.print("PS1:"); Serial.println(gDataModel.fPressure_mmH2O[0], 2);
-                break;
-              case 1:
-                Serial.print("PS2:"); Serial.println(gDataModel.fPressure_mmH2O[1], 2);
-                break;
-              case 2:
-                Serial.print("RQP:"); Serial.println(gDataModel.fRequestPressure_mmH2O, 2);
-                break;
-              case 3:
-                Serial.print("BAT:"); Serial.println(gDataModel.fBatteryLevel, 2);
-                break;
-              case 4:
-                Serial.print("PMP:"); Serial.println(gDataModel.nPWMPump, DEC);
-                break;
-              case 5:
-                Serial.print("STA:"); Serial.println(gDataModel.nState, DEC);
-                break;
-              case 6:
-                Serial.print("CTL:"); Serial.println(gDataModel.nControlMode, DEC);
-                break;
-              case 7:
-                  Serial.print("TRG:"); Serial.println(gDataModel.nTriggerMode, DEC);
-                  break;
-              case 8:
-                  Serial.print("CYC:"); Serial.println(gDataModel.nCycleState, DEC);
-                  break;
-              default:
-                  gSendMsg = false;
-            }
-
-            // Select next message
-            gMsgTxID++;
-
-        } else if ((millis() - gTickPublish) > kPeriodCommPublish)
-        {
-          gSendMsg = true;
-          gMsgTxID = 0;
-          gTickPublish = millis();
-        }
-
-        // Process input string, wait for AT .... <cr><lf>
         if (Serial.available() > 0)
         {
             if ((millis() - gRxBuffer.lastRxTick) > kSerialDiscardTimeout)
@@ -109,7 +51,8 @@ void Communications_Process()
             {
                 count = kRxBufferSize-1;
             }
-            Serial.readBytes(&gRxBuffer.data[ofs], count);
+            
+            Serial.readBytes(&gRxBuffer.data[ofs], count-ofs);
 
             // Scan for crlf
             int cmdOfs = 0;
@@ -118,16 +61,16 @@ void Communications_Process()
                 if (gRxBuffer.data[a]   == '\r' &&
                     gRxBuffer.data[a+1] == '\n')
                 {
-                    ParseCommand(&gRxBuffer.data[cmdOfs], a+1 - cmdOfs);
+                    SerialPortReader::ParseCommand(&gRxBuffer.data[cmdOfs], a+2 - cmdOfs);
 
                     ++a;
                     cmdOfs = a+1;
                 }
             }
 
-            if (cmdOfs > 0 && cmdOfs < count)
+            if (cmdOfs > 0 && cmdOfs <= count)
             {
-                memmove(&gRxBuffer.data[0], &gRxBuffer.data[cmdOfs], count-cmdOfs);
+                memmove(&gRxBuffer.data[0], &gRxBuffer.data[cmdOfs], cmdOfs);
                 count = count - cmdOfs;
             }
 

@@ -21,7 +21,7 @@ enum eConsts
     kPeriodWarmup               = 1000,     // Period to warmup the system in milliseconds
     kPeriodStabilization        = 100,      // Stablization period between respiration cycles
     kEEPROM_Version             = 1,        // EEPROM version must match this version for compatibility
-    kMaxCurveCount              = 16,       // Maximum respiration curve index count
+    kMaxCurveCount              = 8,       // Maximum respiration curve index count
 };
 
 HXCOMPILATIONASSERT(assertSensorPeriodCheck, (kPeriodSensors >= 1));
@@ -68,6 +68,16 @@ enum eTriggerMode
 
     kTriggerMode_Count
 };
+
+enum eAlarm
+{
+	kAlarm_MaxPressureLimit 			= (1<<0),
+	kAlarm_MinPressureLimit 			= (1<<1),
+	kAlarm_PressureSensorRedudancyFail	= (1<<2),
+	kAlarm_InvalidConfiguration			= (1<<3),
+	kAlarm_BatteryLow					= (1<<4),
+};
+
 
 const float kMPX5010_MaxPressure_mmH2O          = 1019.78f;
 const float kMPX5010_MaxPressureDelta_mmH2O     = 40.0f;

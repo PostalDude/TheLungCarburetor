@@ -3,13 +3,18 @@
 #include "configuration.h"
 #include "lcd_keypad.h"
 
+#define AUTO_PRESSURE_CALIB_AT_BOOT 	0
+
 // Initialize sensor devices
 bool Sensors_Init()
 {
     return true;
 }
 
+#if AUTO_PRESSURE_CALIB_AT_BOOT
+// Set zero counter, when activating auto-pressure sensor setzero at boot
 static int gSetZero = 100;
+#endif
 
 // Process sensors sampling
 void Sensors_Process()
@@ -41,8 +46,8 @@ void Sensors_Process()
       gDataModel.nRawPressure[1] = 0;
     }
 
-    //*** Hack for setzero at boot temporarily, WILL BE REMOVED!
-#if 1
+    // Debug code for automatically setting pressure at Zero on boot
+#if AUTO_PRESSURE_CALIB_AT_BOOT
     if (gSetZero > 0)
     {
         --gSetZero;
