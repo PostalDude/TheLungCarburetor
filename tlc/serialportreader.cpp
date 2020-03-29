@@ -5,21 +5,26 @@
 
 namespace
 {
+    // Protocol debug2
     enum Commands
     {
         Commands_Unknown = 0,
         Commands_Status,
         Commands_Alive,
-        Commands_Trigger,
+        Command_Trigger,
+        Commands_Cycle,
         Commands_Fio,
         Commands_Curve,
-        Commands_InhalePsi,
-        Commands_ExhalePsi,
-        Commands_AlarmAirFlow,
-        Commands_AlarmPsi,
-        Commands_AlarmO2Mix,
-        Commands_AlarmRebreathing,
-        Commands_SetZeroPsi,
+        Commands_AlarmLowTidalVolume,
+        Commands_AlarmHighTidalVolume,
+        Commands_AlarmLowPressure,
+        Commands_AlarmHighPressure,
+        Commands_AlarmLowFio2Mix,
+        Commands_AlarmHighFio2Mix,
+        Commands_AlarmNonRebreathingValue,
+        Commands_InitializePressureSensor,
+        Commands_InitializePeepValue,
+        Commands_InitializeTidalVolume,
         Commands_Count
     };
 
@@ -28,15 +33,19 @@ namespace
         "STA",
         "ALI",
         "TRI",
+        "CYC",
         "FIO",
         "CUR",
-        "INH",
-        "EXH",
-        "ALF",
+        "ALT",
+        "AHT",
         "ALP",
-        "ALO",
-        "ALR",
-        "SZP",
+        "AHP",
+        "ALF",
+        "AHF",
+        "ANR",
+        "IPS",
+        "IPV",
+        "ITV",
         "UNK"
     };
 
@@ -128,7 +137,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
 {
     // replace the end of the string with 0s so it's compatible with the strcmp function
     uint8_t dataIndex = 0;
-
+    
     // First bytes is the command
     if (length < kCommandSize)
     {
@@ -178,8 +187,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
         Serial.print("\r\n");
     }
     break;
-
-    case Commands_Trigger:
+    case Command_Trigger:
     {
         uint8_t temp = 0;
         bool ok = getValue(pData, dataIndex, length, temp);
@@ -195,9 +203,20 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
     }
     break;
 
+    case Commands_Cycle:
+    {
+        uint8_t temp = 0;
+        bool ok = getValue(pData, dataIndex, length, temp);
+        if (ok)
+            Serial.print(ReturnCommands[ReturnCommands_ACK]);
+        else
+            Serial.print(ReturnCommands[ReturnCommands_NACK]);
+    }
+    break;
+
     case Commands_Fio:
     {
-        uint8_t fio;
+        float fio;
         if (getValue(pData, dataIndex, length, fio))
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
@@ -285,79 +304,101 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
     }
     break;
 
-    case Commands_InhalePsi:
+    case Commands_AlarmLowTidalVolume:
     {
-        uint8_t inhalePsi;
-        if (getValue(pData, dataIndex, length, inhalePsi))
-            Serial.print(ReturnCommands[ReturnCommands_ACK]);
-        else
-            Serial.print(ReturnCommands[ReturnCommands_NACK]);
-    }
-    break;
-
-    case Commands_ExhalePsi:
-    {
-        uint8_t exhalePsi;
-        if (getValue(pData, dataIndex, length, exhalePsi))
-            Serial.print(ReturnCommands[ReturnCommands_ACK]);
-        else
-            Serial.print(ReturnCommands[ReturnCommands_NACK]);
-    }
-    break;
-
-    case Commands_AlarmAirFlow:
-    {
-        uint8_t* inhalePsi = nullptr;
+        uint8_t* temp = nullptr;
         uint8_t count = 0;
-        if (getValueArray(pData, dataIndex, length, inhalePsi, count) && count == 2)
+        if (getValueArray(pData, dataIndex, length, temp, count) && count == 2)
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
     }
     break;
 
-    case Commands_AlarmPsi:
+    case Commands_AlarmHighTidalVolume:
     {
-        uint8_t* psi = nullptr;
+        uint8_t* temp = nullptr;
         uint8_t count = 0;
-        if (getValueArray(pData, dataIndex, length, psi, count) && count == 2)
+        if (getValueArray(pData, dataIndex, length, temp, count) && count == 2)
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
     }
     break;
 
-    case Commands_AlarmO2Mix:
+    case Commands_AlarmLowPressure:
     {
-        uint8_t* o2mix = nullptr;
+        uint8_t* temp = nullptr;
         uint8_t count = 0;
-        if (getValueArray(pData, dataIndex, length, o2mix, count) && count == 2)
+        if (getValueArray(pData, dataIndex, length, temp, count) && count == 2)
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
     }
     break;
 
-    case Commands_AlarmRebreathing:
+    case Commands_AlarmHighPressure:
     {
-        uint8_t rebreathing;
-        if (getValue(pData, dataIndex, length, rebreathing))
+        uint8_t* temp = nullptr;
+        uint8_t count = 0;
+        if (getValueArray(pData, dataIndex, length, temp, count) && count == 2)
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
     }
     break;
 
-    case Commands_SetZeroPsi:
+    case Commands_AlarmLowFio2Mix:
     {
-        uint8_t zeropsi;
-        if (getValue(pData, dataIndex, length, zeropsi))
+        uint8_t* temp = nullptr;
+        uint8_t count = 0;
+        if (getValueArray(pData, dataIndex, length, temp, count) && count == 2)
             Serial.print(ReturnCommands[ReturnCommands_ACK]);
         else
             Serial.print(ReturnCommands[ReturnCommands_NACK]);
     }
     break;
 
+    case Commands_AlarmHighFio2Mix:
+    {
+        uint8_t* temp = nullptr;
+        uint8_t count = 0;
+        if (getValueArray(pData, dataIndex, length, temp, count) && count == 2)
+            Serial.print(ReturnCommands[ReturnCommands_ACK]);
+        else
+            Serial.print(ReturnCommands[ReturnCommands_NACK]);
+    }
+    break;
+
+    case Commands_AlarmNonRebreathingValue:
+    {
+        uint8_t* temp = nullptr;
+        uint8_t count = 0;
+        if (getValueArray(pData, dataIndex, length, temp, count) && count == 2)
+            Serial.print(ReturnCommands[ReturnCommands_ACK]);
+        else
+            Serial.print(ReturnCommands[ReturnCommands_NACK]);
+    }
+    break;
+
+    case Commands_InitializePressureSensor:
+    {
+        Serial.print(ReturnCommands[ReturnCommands_ACK]);
+    }
+    break;
+
+    case Commands_InitializePeepValue:
+    {
+        Serial.print(ReturnCommands[ReturnCommands_ACK]);
+    }
+    break;
+
+    case Commands_InitializeTidalVolume:
+    {
+        Serial.print(ReturnCommands[ReturnCommands_ACK]);
+    }
+    break;
+    
     default:
         Serial.print(ReturnCommands[ReturnCommands_NACK]);
         break;
