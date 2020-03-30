@@ -1,5 +1,6 @@
 #include "communications.h"
 #include "datamodel.h"
+#include "lcd_keypad.h"
 #include "serialportreader.h"
 
 static bool     gSerialConnected    = false;
@@ -61,7 +62,7 @@ void Communications_Process()
                 if (gRxBuffer.data[a]   == '\r' &&
                     gRxBuffer.data[a+1] == '\n')
                 {
-                    SerialPortReader::ParseCommand(&gRxBuffer.data[cmdOfs], a+2 - cmdOfs);
+                    ParseCommand(&gRxBuffer.data[cmdOfs], a+2 - cmdOfs);
 
                     ++a;
                     cmdOfs = a+1;
@@ -83,5 +84,15 @@ void Communications_Process()
             gRxBuffer.rxSize = count;
             gRxBuffer.lastRxTick = millis();
         }
+
+        #define PRINT_DEBUG_TO_SERIAL 0
+        #ifdef PRINT_DEBUG_TO_SERIAL
+        // Print the lcd details on the serial since not everyone has one!
+        if (strlen(gLcdDetail) > 0)
+        {
+            Serial.print("DEBUG:");
+            Serial.println(gLcdDetail);
+        }
+        #endif
     }
 }
