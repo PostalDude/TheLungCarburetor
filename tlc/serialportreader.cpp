@@ -240,7 +240,7 @@ bool ParseCommand(uint8_t* pData, uint8_t length)
     case Commands_Configs:
     {
         serialPrint(0.0f); // FIO
-        Serial.print(","); serialPrint(gConfiguration.fTakeOverThreshold_ms);
+        serialPrint(0.0f);//Serial.print(","); serialPrint(gConfiguration.fTakeOverThreshold_ms);
         float breatheRate = static_cast<float>(gDataModel.nRespirationPerMinute);
         Serial.print(","); serialPrint(breatheRate); 
         Serial.print(","); serialPrint(gDataModel.pExhaleCurve.fSetPoint_mmH2O[0]);
@@ -390,7 +390,7 @@ bool ParseCommand(uint8_t* pData, uint8_t length)
         {
             if (temp >= 0.0f)
             {
-                gConfiguration.fTakeOverThreshold_ms = temp;
+                //gConfiguration.fTakeOverThreshold_ms = temp;
                 Serial.println("ACK");
             }
             else
