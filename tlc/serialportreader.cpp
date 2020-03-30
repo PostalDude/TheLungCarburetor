@@ -238,32 +238,8 @@ bool ParseCommand(uint8_t* pData, uint8_t length)
     switch (commandIndex)
     {
     case Commands_Configs:
-    { 
-        /*
-        Serial.print("fio2:"); serialPrint(0.0f);
-        Serial.print(",TTH:"); serialPrint(gConfiguration.fTakeOverThreshold_ms);
-        float breatheRate = static_cast<float>(gDataModel.nRespirationPerMinute);
-        Serial.print(",BRR:"); serialPrint(breatheRate); 
-        Serial.print(",IPT"); serialPrint(gDataModel.pExhaleCurve.fSetPoint_mmH2O[0]);
-        Serial.print(",EPT"); serialPrint(gDataModel.pExhaleCurve.fSetPoint_mmH2O[1]);
-
-        breatheRate /= 1000.0f;
-        breatheRate = 1.0f / breatheRate;
-        breatheRate = 1.0f - breatheRate;
-        Serial.print(",INR"); serialPrint(breatheRate);
-        Serial.print(",ENR"); serialPrint(1.0f - breatheRate);
-        Serial.print(",ABL"); serialPrint(gConfiguration.fMinBatteryLevel);
-        Serial.print(",ALT"); serialPrint(0.0f);
-        Serial.print(",AHT:"); serialPrint(0.0f);
-        Serial.print(",ALP:"); serialPrint(gConfiguration.fMinPressureLimit_mmH2O);
-        Serial.print(",AHP:"); serialPrint(gConfiguration.fMaxPressureLimit_mmH2O);
-        Serial.print(",ADP:"); serialPrint(gConfiguration.fMaxPressureDelta_mmH2O);
-        Serial.print(",ALF:"); serialPrint(0.0f);
-        Serial.print(",AHF:"); serialPrint(0.0f);
-        Serial.print(",ANR:"); serialPrint(0.0f);
-
-        */
-        serialPrint(0.0f);
+    {
+        serialPrint(0.0f); // FIO
         Serial.print(","); serialPrint(gConfiguration.fTakeOverThreshold_ms);
         float breatheRate = static_cast<float>(gDataModel.nRespirationPerMinute);
         Serial.print(","); serialPrint(breatheRate); 
@@ -276,14 +252,14 @@ bool ParseCommand(uint8_t* pData, uint8_t length)
         Serial.print(","); serialPrint(breatheRate);
         Serial.print(","); serialPrint(1.0f - breatheRate);
         Serial.print(","); serialPrint(gConfiguration.fMinBatteryLevel);
-        Serial.print(","); serialPrint(0.0f);
-        Serial.print(","); serialPrint(0.0f);
+        Serial.print(","); serialPrint(0.0f); // ALT
+        Serial.print(","); serialPrint(0.0f); // AHT
         Serial.print(","); serialPrint(gConfiguration.fMinPressureLimit_mmH2O);
         Serial.print(","); serialPrint(gConfiguration.fMaxPressureLimit_mmH2O);
         Serial.print(","); serialPrint(gConfiguration.fMaxPressureDelta_mmH2O);
-        Serial.print(","); serialPrint(0.0f);
-        Serial.print(","); serialPrint(0.0f);
-        Serial.print(","); serialPrint(0.0f);
+        Serial.print(","); serialPrint(0.0f); // ALF
+        Serial.print(","); serialPrint(0.0f); // AHF
+        Serial.print(","); serialPrint(0.0f); // ANR
 
         Serial.print("\r\n");
     }
@@ -295,17 +271,6 @@ bool ParseCommand(uint8_t* pData, uint8_t length)
 
     case Commands_Status: 
     {
-        /*
-        Serial.print("PS1:"); serialPrint(gDataModel.fPressure_mmH2O[0]);
-        Serial.print(",PS2:"); serialPrint(gDataModel.fPressure_mmH2O[1]);
-        Serial.print(",RPQ:"); serialPrint(gDataModel.fRequestPressure_mmH2O);
-        Serial.print(",BAT:"); serialPrint(gDataModel.fBatteryLevel);
-        Serial.print(",PMP:"); serialPrint(static_cast<int>(gDataModel.nPWMPump));
-        Serial.print(",STA:"); serialPrint(static_cast<int>(gDataModel.nState));
-        Serial.print(",CTL:"); serialPrint(static_cast<int>(gDataModel.nControlMode));
-        Serial.print(",TRG:"); serialPrint(static_cast<int>(gDataModel.nTriggerMode));
-        Serial.print(",CYC:"); serialPrint(static_cast<int>(gDataModel.nCycleState));
-        */
         serialPrint(gDataModel.fPressure_mmH2O[0]);
         Serial.print(","); serialPrint(gDataModel.fPressure_mmH2O[1]);
         Serial.print(","); serialPrint(gDataModel.fRequestPressure_mmH2O);
