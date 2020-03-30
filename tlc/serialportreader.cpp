@@ -12,11 +12,12 @@ namespace
         Commands_Unknown = 0,
         Commands_Status,
         Commands_Alive,
-        Command_Trigger,
+        Commands_Trigger,
+        Commands_Control,
         Commands_Cycle,
         Commands_Fio,
         Commands_Curve,
-        Commands_AlarmMinBatteryLevel, // TODO
+        Commands_AlarmMinBatteryLevel,
         Commands_AlarmLowTidalVolume,
         Commands_AlarmHighTidalVolume,
         Commands_AlarmLowPressure,
@@ -36,6 +37,7 @@ namespace
         "STA",
         "ALI",
         "TRI",
+        "CTL",
         "CYC",
         "FIO",
         "CUR",
@@ -53,6 +55,7 @@ namespace
         "ITV",
         "UNK"
     };
+
 
     enum ReturnCommands
     {
@@ -139,6 +142,15 @@ namespace
 
         return true;
     }
+
+    // DEBUG function
+    void printValue(const char* str, int f)
+    {
+        char b[30];
+        itoa(f, b, 10);
+        Serial.print(str); Serial.println(b);
+    }
+    // printValue("DEBUG: in ratio ", (int)(inhaleRatio*1000.0f));
 }
 
 bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
@@ -180,7 +192,6 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
         Serial.print(",RPQ:"); Serial.print(gParseBuffer);
         dtostrf(gDataModel.fBatteryLevel,0, 5, gParseBuffer);
         Serial.print(",BAT:"); Serial.print(gParseBuffer);
-
         itoa(static_cast<int>(gDataModel.nPWMPump), gParseBuffer, 10);
         Serial.print(",PMP:"); Serial.print(gParseBuffer);
         itoa(static_cast<int>(gDataModel.nState), gParseBuffer, 10);
@@ -191,10 +202,38 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
         Serial.print(",TRG:"); Serial.print(gParseBuffer);
         itoa(static_cast<int>(gDataModel.nCycleState), gParseBuffer, 10);
         Serial.print(",CYC:"); Serial.print(gParseBuffer);
+
+        // Alarms
+        if (gDataModel.nSafetyFlags & kAlarm_MinPressureLimit)
+            Serial.print(",ALARM:MIM_PRESSURE_LIMIT");
+        if (gDataModel.nSafetyFlags & kAlarm_MaxPressureLimit)
+            Serial.print(",ALARM:MAX_PRESSURE_LIMIT");
+        if (gDataModel.nSafetyFlags & kAlarm_PressureSensorRedudancyFail)
+            Serial.print(",ALARM:PRESSURE_SENSOR_REDUDANCY_FAIL");
+        if (gDataModel.nSafetyFlags & kAlarm_InvalidConfiguration)
+            Serial.print(",ALARM:INVALID_CONFIGURATION");
+
         Serial.print("\r\n");
     }
     break;
-    case Command_Trigger:
+
+    case Commands_Control:
+    {
+        int32_t temp = 0;
+        bool ok = getValue(pData, dataIndex, length, temp);
+        if (ok)
+            ok = temp < kControlMode_Count;
+        if (ok)
+        {
+            gDataModel.nControlMode = static_cast<eControlMode>(temp);
+            Serial.print(ReturnCommands[ReturnCommands_ACK]);
+        }
+        else
+            Serial.print(ReturnCommands[ReturnCommands_NACK]);
+    }
+    break;
+
+    case Commands_Trigger:
     {
         int32_t temp = 0;
         bool ok = getValue(pData, dataIndex, length, temp);
@@ -212,7 +251,7 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
 
     case Commands_Cycle:
     {
-        int32_t temp = 0;
+        int8_t temp = 0;
         bool ok = getValue(pData, dataIndex, length, temp);
         if (ok)
         {
@@ -253,65 +292,67 @@ bool SerialPortReader::ParseCommand(uint8_t* pData, uint8_t length)
             ok = (
                 inhaleMmH2O >= 0.0f && inhaleMmH2O <= 40.0f &&
                 exhaleMmH2O >= 0.0f && exhaleMmH2O <= 25.0f &&
-                inhaleRatio >= 1.0f && exhaleRatio >= 1.0f &&
+                inhaleRatio >= 0.0f && exhaleRatio >= 0.0f &&
                 breatheRate >= 6.0f && breatheRate <= 40.0f
             );
         }
 
         if (ok)
         {
-          // Updating Data model
-          float breatheTime = 1/breatheRate; //TODO: Pass breathe time instead of breathre Rate - or better yet, separate inhale and exhale times
+            gDataModel.nRespirationPerMinute = breatheRate;
 
-          //Inhale curve
-          tPressureCurve inhaleCurve;
-          inhaleCurve.nCount = 3; //Initial point, flex point, end point
-          inhaleCurve.nSetPoint_TickMs[0] = 0;
-          inhaleCurve.nSetPoint_TickMs[2] = breatheTime*inhaleRatio; //Assumes inhaleRatio + exhaleRatio = 1
-          inhaleCurve.nSetPoint_TickMs[1] = (uint32_t) inhaleCurve.nSetPoint_TickMs[2]/2; //I don't know if it's better to convert or to round.
+            // Updating Data model
+            float breatheTime = 1.0f/breatheRate; //TODO: Pass breathe time instead of breathre Rate - or better yet, separate inhale and exhale times
 
-          inhaleCurve.fSetPoint_mmH2O[0] = exhaleMmH2O;
-          inhaleCurve.fSetPoint_mmH2O[1] = inhaleMmH2O;
-          inhaleCurve.fSetPoint_mmH2O[2] = inhaleMmH2O;
-          //TODO: Add more intermediary points if curve is not smooth enough
+            //Inhale curve
+            tPressureCurve inhaleCurve;
+            inhaleCurve.nCount = 3; //Initial point, flex point, end point
+            inhaleCurve.nSetPoint_TickMs[0] = 0;
+            inhaleCurve.nSetPoint_TickMs[2] = static_cast<uint32_t>((breatheTime*inhaleRatio) * 1000); //Assumes inhaleRatio + exhaleRatio = 1
+            inhaleCurve.nSetPoint_TickMs[1] = inhaleCurve.nSetPoint_TickMs[2] / 2; //I don't know if it's better to convert or to round.
 
-          //Exhale curve
-          tPressureCurve exhaleCurve;
-          exhaleCurve.nCount = 3;
-          exhaleCurve.nSetPoint_TickMs[0] = 0;
-          exhaleCurve.nSetPoint_TickMs[2] = breatheTime*exhaleRatio; //Assumes inhaleRatio + exhaleRatio = 1
-          exhaleCurve.nSetPoint_TickMs[1] = (uint32_t) exhaleCurve.nSetPoint_TickMs[2]/2; //I don't know if it's better to convert or to round.
+            inhaleCurve.fSetPoint_mmH2O[0] = exhaleMmH2O;
+            inhaleCurve.fSetPoint_mmH2O[1] = inhaleMmH2O;
+            inhaleCurve.fSetPoint_mmH2O[2] = inhaleMmH2O;
+            //TODO: Add more intermediary points if curve is not smooth enough
 
-          exhaleCurve.fSetPoint_mmH2O[0] = inhaleMmH2O;
-          exhaleCurve.fSetPoint_mmH2O[1] = exhaleMmH2O;
-          exhaleCurve.fSetPoint_mmH2O[2] = exhaleMmH2O;
+            //Exhale curve
+            tPressureCurve exhaleCurve;
+            exhaleCurve.nCount = 3;
+            exhaleCurve.nSetPoint_TickMs[0] = 0;
+            exhaleCurve.nSetPoint_TickMs[2] = static_cast<uint32_t>((breatheTime*exhaleRatio) * 1000); //Assumes inhaleRatio + exhaleRatio = 1
+            exhaleCurve.nSetPoint_TickMs[1] = exhaleCurve.nSetPoint_TickMs[2] / 2; //I don't know if it's better to convert or to round.
+
+            exhaleCurve.fSetPoint_mmH2O[0] = inhaleMmH2O;
+            exhaleCurve.fSetPoint_mmH2O[1] = exhaleMmH2O;
+            exhaleCurve.fSetPoint_mmH2O[2] = exhaleMmH2O;
+
+            gDataModel.pInhaleCurve = inhaleCurve;
+            gDataModel.pExhaleCurve = exhaleCurve;
+            
+            /*********** IMPORTANT NOTE *******************/
+            /*
+            Depending on how this profile is read to send commands, this could cause the system to output something dangerous. I don't know where the profile is handled in the code.
+
+            Expected correct way (pseudo code):
+
+            while (1)
+            if t between CurrentCurve.TickMS[0] and currentCurve.TickMS[1]
+                cmd = CurrentCurve.fSetPoint_mmH2O[1];
+
+            else if t between CurrentCurve.TickMS[1] and currentCurve.TickMS[2]
+                cmd = CurrentCurve.fSetPoint_mmH2O[2];
+
+            t++
 
 
-          gDataModel.pInhaleCurve = inhaleCurve;
-          gDataModel.pExhaleCurve = exhaleCurve;
-          /*********** IMPORTANT NOTE *******************/
-          /*
-          Depending on how this profile is read to send commands, this could cause the system to output something dangerous. I don't know where the profile is handled in the code.
+            Possible seemingly logical way that would yield the wrong profile
 
-          Expected correct way (pseudo code):
-
-          while (1)
-          if t between CurrentCurve.TickMS[0] and currentCurve.TickMS[1]
-              cmd = CurrentCurve.fSetPoint_mmH2O[1];
-
-          else if t between CurrentCurve.TickMS[1] and currentCurve.TickMS[2]
-              cmd = CurrentCurve.fSetPoint_mmH2O[2];
-
-          t++
-
-
-          Possible seemingly logical way that would yield the wrong profile
-
-          while(1)
-              for (i = 1; i<CurrentCurve.nCount; i++)
-                  if (t == CurrentCurve.TickMS[i])
-                      currentCmd = CurrentCurve.fSetPoint_mmH2O[i];
-          */
+            while(1)
+                for (i = 1; i<CurrentCurve.nCount; i++)
+                    if (t == CurrentCurve.TickMS[i])
+                        currentCmd = CurrentCurve.fSetPoint_mmH2O[i];
+            */
         }
 
         if (ok)
