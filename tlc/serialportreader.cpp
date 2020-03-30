@@ -159,33 +159,31 @@ namespace
     // printValue("DEBUG: in ratio ", (int)(inhaleRatio*1000.0f));
 }
 
-void updateCurve(const float breatheRate, const float inhaleMmH2O, const float exhaleMmH2O, const float inhaleRatio, const float exhaleRatio)
+void updateCurve()
 {
-    gDataModel.nRespirationPerMinute = static_cast<uint8_t>(breatheRate);
-    
     // Updating Data model
     float breatheTime = 1.0f/gDataModel.nRespirationPerMinute; //TODO: Pass breathe time instead of breathre Rate - or better yet, separate inhale and exhale times
 
     //Inhale curve
     gDataModel.pInhaleCurve.nCount = 3; //Initial point, flex point, end point
     gDataModel.pInhaleCurve.nSetPoint_TickMs[0] = 0;
-    gDataModel.pInhaleCurve.nSetPoint_TickMs[2] = static_cast<uint32_t>((breatheTime*inhaleRatio) * 1000); //Assumes inhaleRatio + exhaleRatio = 1
+    gDataModel.pInhaleCurve.nSetPoint_TickMs[2] = static_cast<uint32_t>((breatheTime*gDataModel.fInhaleRatio) * 1000); //Assumes inhaleRatio + exhaleRatio = 1
     gDataModel.pInhaleCurve.nSetPoint_TickMs[1] = gDataModel.pInhaleCurve.nSetPoint_TickMs[2] / 2; //I don't know if it's better to convert or to round.
 
-    gDataModel.pInhaleCurve.fSetPoint_mmH2O[0] = exhaleMmH2O;
-    gDataModel.pInhaleCurve.fSetPoint_mmH2O[1] = inhaleMmH2O;
-    gDataModel.pInhaleCurve.fSetPoint_mmH2O[2] = inhaleMmH2O;
+    gDataModel.pInhaleCurve.fSetPoint_mmH2O[0] = gDataModel.fExhalePressureTarget_mmH2O;
+    gDataModel.pInhaleCurve.fSetPoint_mmH2O[1] = gDataModel.fInhalePressureTarget_mmH2O;
+    gDataModel.pInhaleCurve.fSetPoint_mmH2O[2] = gDataModel.fInhalePressureTarget_mmH2O;
     //TODO: Add more intermediary points if curve is not smooth enough
 
     //Exhale curve
     gDataModel.pExhaleCurve.nCount = 3;
     gDataModel.pExhaleCurve.nSetPoint_TickMs[0] = 0;
-    gDataModel.pExhaleCurve.nSetPoint_TickMs[2] = static_cast<uint32_t>((breatheTime*exhaleRatio) * 1000); //Assumes inhaleRatio + exhaleRatio = 1
+    gDataModel.pExhaleCurve.nSetPoint_TickMs[2] = static_cast<uint32_t>((breatheTime*gDataModel.fExhaleRatio) * 1000); //Assumes inhaleRatio + exhaleRatio = 1
     gDataModel.pExhaleCurve.nSetPoint_TickMs[1] = gDataModel.pExhaleCurve.nSetPoint_TickMs[2] / 2; //I don't know if it's better to convert or to round.
 
-    gDataModel.pExhaleCurve.fSetPoint_mmH2O[0] = inhaleMmH2O;
-    gDataModel.pExhaleCurve.fSetPoint_mmH2O[1] = exhaleMmH2O;
-    gDataModel.pExhaleCurve.fSetPoint_mmH2O[2] = exhaleMmH2O;
+    gDataModel.pExhaleCurve.fSetPoint_mmH2O[0] = gDataModel.fInhalePressureTarget_mmH2O;
+    gDataModel.pExhaleCurve.fSetPoint_mmH2O[1] = gDataModel.fExhalePressureTarget_mmH2O;
+    gDataModel.pExhaleCurve.fSetPoint_mmH2O[2] = gDataModel.fExhalePressureTarget_mmH2O;
     
     /*********** IMPORTANT NOTE *******************/
     /*
@@ -240,26 +238,22 @@ bool ParseCommand(uint8_t* pData, uint8_t length)
     case Commands_Configs:
     {
         serialPrint(0.0f); // FIO
-        serialPrint(0.0f);//Serial.print(","); serialPrint(gConfiguration.fTakeOverThreshold_ms);
+        Serial.print(","); serialPrint(0.0f);//serialPrint(gConfiguration.fTakeOverThreshold_ms);
         float breatheRate = static_cast<float>(gDataModel.nRespirationPerMinute);
         Serial.print(","); serialPrint(breatheRate); 
-        Serial.print(","); serialPrint(gDataModel.pExhaleCurve.fSetPoint_mmH2O[0]);
-        Serial.print(","); serialPrint(gDataModel.pExhaleCurve.fSetPoint_mmH2O[1]);
-
-        breatheRate /= 1000.0f;
-        breatheRate = 1.0f / breatheRate;
-        breatheRate = 1.0f - breatheRate;
-        Serial.print(","); serialPrint(breatheRate);
-        Serial.print(","); serialPrint(1.0f - breatheRate);
+        Serial.print(","); serialPrint(gDataModel.fInhalePressureTarget_mmH2O);
+        Serial.print(","); serialPrint(gDataModel.fExhalePressureTarget_mmH2O);
+        Serial.print(","); serialPrint(gDataModel.fInhaleRatio);
+        Serial.print(","); serialPrint(gDataModel.fExhaleRatio);
         Serial.print(","); serialPrint(gConfiguration.fMinBatteryLevel);
-        Serial.print(","); serialPrint(0.0f); // ALT
-        Serial.print(","); serialPrint(0.0f); // AHT
+        Serial.print(","); serialPrint(0.0f); // ALT - alarm low tidal
+        Serial.print(","); serialPrint(0.0f); // AHT - alarm high tidal
         Serial.print(","); serialPrint(gConfiguration.fMinPressureLimit_mmH2O);
         Serial.print(","); serialPrint(gConfiguration.fMaxPressureLimit_mmH2O);
         Serial.print(","); serialPrint(gConfiguration.fMaxPressureDelta_mmH2O);
-        Serial.print(","); serialPrint(0.0f); // ALF
-        Serial.print(","); serialPrint(0.0f); // AHF
-        Serial.print(","); serialPrint(0.0f); // ANR
+        Serial.print(","); serialPrint(0.0f); // ALF - alarm low fio mix
+        Serial.print(","); serialPrint(0.0f); // AHF - alarm high fio mix
+        Serial.print(","); serialPrint(0.0f); // ANR - alarm non rebreathing value
 
         Serial.print("\r\n");
     }
@@ -373,7 +367,12 @@ bool ParseCommand(uint8_t* pData, uint8_t length)
 
         if (ok)
         {
-            updateCurve(breatheRate, inhaleMmH2O, exhaleMmH2O, inhaleRatio, exhaleRatio);
+            gDataModel.nRespirationPerMinute = static_cast<uint8_t>(breatheRate);
+            gDataModel.fInhalePressureTarget_mmH2O = inhaleMmH2O;
+            gDataModel.fExhalePressureTarget_mmH2O = exhaleMmH2O;
+            gDataModel.fInhaleRatio             = inhaleRatio;
+            gDataModel.fExhaleRatio             = exhaleRatio;
+            updateCurve();
         }
 
         if (ok)

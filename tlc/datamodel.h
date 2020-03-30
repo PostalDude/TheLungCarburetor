@@ -28,7 +28,11 @@ struct tDataModel
     uint8_t         nCurveIndex;            // Current executing curve setpoint index
 
     float           fRequestPressure_mmH2O; // Requested pressure set-point
-    uint8_t         nRespirationPerMinute;  // Number of respiration per minute
+    uint8_t         nRespirationPerMinute;  // Number of respiration per minute    
+    float           fInhalePressureTarget_mmH2O;
+    float           fExhalePressureTarget_mmH2O;
+    float           fInhaleRatio;
+    float           fExhaleRatio;
 
     float           fPressure_mmH2O[2];     // Converted pressure, useable as cmH2O
     float           fPressureError;         // Pressure error: readings vs set-point
@@ -44,6 +48,7 @@ struct tDataModel
     uint32_t        nTickSetPoint;          // Current curve pressure set-point ticker
     uint32_t        nTickRespiration;       // Start of respiration tick
     uint32_t        nTickStabilization;     // Stabilization tick between respiration
+    uint32_t        nTickWait;              // Wait tick after respiration
     uint32_t        nTickLcdKeypad;         // Lcd and Keypad update and scan rate
 };
 
