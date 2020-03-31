@@ -1,3 +1,9 @@
+///
+/// \file 		tlc.ino
+/// \brief 		The Lung Carburetor Firmware main source file
+///				
+/// \author 	Frederic Lauzon
+/// \defgroup 	main Main program
 
 #include "common.h"
 #include "safeties.h"
@@ -90,11 +96,6 @@ void loop()
     default:
         break;
     };
-    
-    // Peripheral processing
-    GPIO_Process();
-                
-    DataModel_Process();
     
     if ((millis() - gDataModel.nTickCommunications) >= kPeriodCommunications)
     {

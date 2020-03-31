@@ -1,3 +1,9 @@
+///
+/// \file       safeties.cpp
+/// \brief      The Lung Carburetor Firmware safeties module
+///
+/// \author     Frederic Lauzon
+/// \ingroup    safeties
 #include "safeties.h"
 #include "configuration.h"
 #include "datamodel.h"

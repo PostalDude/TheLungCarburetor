@@ -1,3 +1,9 @@
+///
+/// \file       sensors.cpp
+/// \brief      The Lung Carburetor Firmware sensors module
+///
+/// \author     Frederic Lauzon
+/// \ingroup    sensors
 #include "sensors.h"
 #include "datamodel.h"
 #include "configuration.h"

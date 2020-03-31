@@ -1,3 +1,9 @@
+///
+/// \file       communications.cpp
+/// \brief      The Lung Carburetor Firmware communications module
+///
+/// \author     Frederic Lauzon
+/// \ingroup    communications
 #include "communications.h"
 #include "datamodel.h"
 #include "lcd_keypad.h"
@@ -5,11 +11,13 @@
 
 static bool     gSerialConnected    = false;
 
+/// \struct tRxBuffer
+/// \brief Receive buffer state
 struct tRxBuffer
 {
-    uint8_t     data[kRxBufferSize];
-    uint8_t     rxSize;
-    uint32_t    lastRxTick;
+    uint8_t     data[kRxBufferSize];    ///> Data receive on serial port
+    uint8_t     rxSize;                 ///> Size of data buffer
+    uint32_t    lastRxTick;             ///> Last reception tick
 };
 static tRxBuffer gRxBuffer;
 

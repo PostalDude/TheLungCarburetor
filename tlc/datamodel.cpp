@@ -1,3 +1,9 @@
+///
+/// \file       datamodel.cpp
+/// \brief      The Lung Carburetor Firmware datamodel module
+///
+/// \author     Frederic Lauzon
+/// \ingroup    datamodel
 #include "datamodel.h"
 
 tDataModel gDataModel;
@@ -37,10 +43,3 @@ bool DataModel_Init()
     return true;
 }
 
-void DataModel_Process()
-{
-    if (gDataModel.nState != kState_Process)
-    {
-        return;
-    }
-}

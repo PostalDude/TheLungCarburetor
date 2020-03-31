@@ -1,3 +1,9 @@
+///
+/// \file       gpio.cpp
+/// \brief      The Lung Carburetor Firmware gpio module
+///
+/// \author     Frederic Lauzon
+/// \ingroup    gpio
 #include "gpio.h"
 #include "datamodel.h"
 #include "control.h"
@@ -20,13 +26,4 @@ bool GPIO_Init()
     digitalWrite(PIN_OUT_PUMP1_PWM, LOW);
 
     return true;
-}
-
-// System process
-void GPIO_Process()
-{
-    if (gDataModel.nState != kState_Process)
-    {
-        return;
-    }
 }
