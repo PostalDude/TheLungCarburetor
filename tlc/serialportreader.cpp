@@ -190,30 +190,6 @@ void updateCurve()
     gDataModel.pExhaleCurve.fSetPoint_mmH2O[0] = gDataModel.fInhalePressureTarget_mmH2O;
     gDataModel.pExhaleCurve.fSetPoint_mmH2O[1] = gDataModel.fExhalePressureTarget_mmH2O;
     gDataModel.pExhaleCurve.fSetPoint_mmH2O[2] = gDataModel.fExhalePressureTarget_mmH2O;
-
-    /*********** IMPORTANT NOTE *******************/
-    /*
-    Depending on how this profile is read to send commands, this could cause the system to output something dangerous. I don't know where the profile is handled in the code.
-
-    Expected correct way (pseudo code):
-
-    while (1)
-    if t between CurrentCurve.TickMS[0] and currentCurve.TickMS[1]
-        cmd = CurrentCurve.fSetPoint_mmH2O[1];
-
-    else if t between CurrentCurve.TickMS[1] and currentCurve.TickMS[2]
-        cmd = CurrentCurve.fSetPoint_mmH2O[2];
-
-    t++
-
-
-    Possible seemingly logical way that would yield the wrong profile
-
-    while(1)
-        for (i = 1; i<CurrentCurve.nCount; i++)
-            if (t == CurrentCurve.TickMS[i])
-                currentCmd = CurrentCurve.fSetPoint_mmH2O[i];
-    */
 }
 
 bool ParseCommand(uint8_t* pData, uint8_t length)
