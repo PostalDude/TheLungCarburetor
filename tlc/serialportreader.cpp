@@ -164,11 +164,13 @@ namespace
     }
 
     // DEBUG function
+    #if 0
     void printValue(const char* str, int f)
     {
         itoa(f, gParseBuffer, 10);
         Serial.print(str); Serial.println(gParseBuffer);
     }
+    #endif
     // printValue("DEBUG: in ratio ", (int)(inhaleRatio*1000.0f));
 }
 
@@ -201,6 +203,9 @@ bool updateCurve()
         gDataModel.pExhaleCurve.fSetPoint_mmH2O[2] = gDataModel.fExhalePressureTarget_mmH2O;
         return true;
     }
+
+    gSafeties.bConfigurationInvalid = true;
+    
     return false;
     
     /*********** IMPORTANT NOTE *******************/
