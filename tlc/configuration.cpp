@@ -1,9 +1,9 @@
 ///
-/// \file 		configuration.cpp
-/// \brief 		The Lung Carburetor Firmware configuration module
-///				
-/// \author 	Frederic Lauzon
-/// \ingroup 	configuration Configuration
+/// \file       configuration.cpp
+/// \brief      The Lung Carburetor Firmware configuration module
+///
+/// \author     Frederic Lauzon
+/// \ingroup    configuration Configuration
 #include "configuration.h"
 #include <EEPROM.h>
 #include "lcd_keypad.h"

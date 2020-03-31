@@ -1,18 +1,18 @@
 ///
-/// \file 		datamodel.h
-/// \brief 		The Lung Carburetor Firmware datamodel definitions file
-///				
-/// \author 	Frederic Lauzon
-/// \defgroup 	datamodel Data Model
+/// \file       datamodel.h
+/// \brief      The Lung Carburetor Firmware datamodel definitions file
+///
+/// \author     Frederic Lauzon
+/// \defgroup   datamodel Data Model
 #ifndef TLC_DATAMODEL_H
 #define TLC_DATAMODEL_H
 
 #include "common.h"
 
-///	\struct tPressureCurve
+/// \struct tPressureCurve
 /// \brief Describe a pressurecurve to execute
 ///
-///	A collection of setpoints of pressure in time to execute for the respiration cycle
+/// A collection of setpoints of pressure in time to execute for the respiration cycle
 struct tPressureCurve
 {
     float           fSetPoint_mmH2O[kMaxCurveCount];    ///> Pressure for every point of the curve
@@ -20,10 +20,10 @@ struct tPressureCurve
     uint8_t         nCount;                             ///> Number of active points in the setpoint curve
 };
 
-///	\struct tDataModel
+/// \struct tDataModel
 /// \brief Describe internal data
 ///
-///	A centralised collection of information read and written by modules
+/// A centralised collection of information read and written by modules
 struct tDataModel
 {
     uint16_t        nSafetyFlags;           ///> Bitmask of safety alarm source eAlarm
@@ -40,11 +40,11 @@ struct tDataModel
     uint8_t         nCurveIndex;            ///> Current executing curve setpoint index
 
     float           fRequestPressure_mmH2O; ///> Requested pressure set-point
-    uint8_t         nRespirationPerMinute;  ///> Number of respiration per minute    
+    uint8_t         nRespirationPerMinute;  ///> Number of respiration per minute
     float           fInhalePressureTarget_mmH2O; ///> Inhale Pressure Target
     float           fExhalePressureTarget_mmH2O; ///> Exhale Pressure Target
-    float           fInhaleRatio;			///> Inhale Ratio
-    float           fExhaleRatio;			///> Exhale Ratio
+    float           fInhaleRatio;           ///> Inhale Ratio
+    float           fExhaleRatio;           ///> Exhale Ratio
 
     float           fPressure_mmH2O[2];     ///> Converted pressure, useable as cmH2O
     float           fPressureError;         ///> Pressure error: readings vs set-point
@@ -66,7 +66,7 @@ struct tDataModel
 
 extern tDataModel gDataModel;
 
-///	\fn bool DataModel_Init()
+/// \fn bool DataModel_Init()
 /// \brief Initialize datamodel defaults
 bool DataModel_Init();
 

@@ -1,15 +1,15 @@
 ///
-/// \file 		configuration.h
-/// \brief 		The Lung Carburetor Firmware configuration module
-///				
-/// \author 	Frederic Lauzon
-/// \defgroup 	configuration Configuration
+/// \file       configuration.h
+/// \brief      The Lung Carburetor Firmware configuration module
+///
+/// \author     Frederic Lauzon
+/// \defgroup   configuration Configuration
 #ifndef TLC_CONFIGURATION_H
 #define TLC_CONFIGURATION_H
 
 #include "common.h"
 
-///	\struct tConfiguration
+/// \struct tConfiguration
 /// \brief NVM Configuration Stored and Loaded from EEPROM.
 struct tConfiguration
 {
@@ -35,19 +35,19 @@ extern tConfiguration gConfiguration;
 // Make sure that configuration structure can fit into the EEPROM
 HXCOMPILATIONASSERT(assertEEPROMSizeCheck, (sizeof(tConfiguration) <= 512));
 
-///	\fn bool Configuration_Init()
+/// \fn bool Configuration_Init()
 /// \brief Initialize configuration module
 bool Configuration_Init();
 
-///	\fn bool Configuration_SetDefaults()
+/// \fn bool Configuration_SetDefaults()
 /// \brief Set default configuration
 bool Configuration_SetDefaults();
 
-///	\fn bool Configuration_Read()
+/// \fn bool Configuration_Read()
 /// \brief Read configuration from eeprom
 bool Configuration_Read();
 
-///	\fn bool Configuration_Write()
+/// \fn bool Configuration_Write()
 /// \brief Write configuration to eeprom
 bool Configuration_Write();
 

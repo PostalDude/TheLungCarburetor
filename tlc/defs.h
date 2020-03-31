@@ -1,15 +1,15 @@
 ///
-/// \file 		defs.h
-/// \brief 		The Lung Carburetor Firmware definitions file
-///				
-/// \author 	Frederic Lauzon
+/// \file       defs.h
+/// \brief      The Lung Carburetor Firmware definitions file
+///
+/// \author     Frederic Lauzon
 #ifndef TLC_DEFS_H
 #define TLC_DEFS_H
 
 // Force error check at compile time for constants
 #define HXCOMPILATIONASSERT(name, x) typedef char name[x ? 1 : -1]
 
-///	\enum eConsts
+/// \enum eConsts
 /// \brief General constants used throughout the firmware
 enum eConsts
 {
@@ -32,32 +32,32 @@ enum eConsts
 HXCOMPILATIONASSERT(assertSensorPeriodCheck, (kPeriodSensors >= 1));
 HXCOMPILATIONASSERT(assertRXBufferSizeCheck, (kRxBufferSize < 255));
 
-///	\enum eState
+/// \enum eState
 /// \brief System state
 enum eState
 {
-    kState_Init = 0,	///> System initializing
-    kState_Idle,		///> System is idle
-    kState_Warmup,		///> System is warming up and sampling sensors
-    kState_Process,		///> System is processing respiration and sensors
-    kState_Error,		///> System raised an error
+    kState_Init = 0,    ///> System initializing
+    kState_Idle,        ///> System is idle
+    kState_Warmup,      ///> System is warming up and sampling sensors
+    kState_Process,     ///> System is processing respiration and sensors
+    kState_Error,       ///> System raised an error
 
     kState_Count
 };
 
-///	\enum eState
+/// \enum eState
 /// \brief Respiration Cycle State
 enum eCycleState
 {
-    kCycleState_WaitTrigger = 0,	///> Respiration cycle waiting for trigger
-    kCycleState_Inhale,				///> Respiration cycle inhaling
-    kCycleState_Exhale,				///> Respiration cycle exnhaling
-    kCycleState_Stabilization,		///> Respiration cycle stabilization of pressure
+    kCycleState_WaitTrigger = 0,    ///> Respiration cycle waiting for trigger
+    kCycleState_Inhale,             ///> Respiration cycle inhaling
+    kCycleState_Exhale,             ///> Respiration cycle exnhaling
+    kCycleState_Stabilization,      ///> Respiration cycle stabilization of pressure
 
     kCycleState_Count
 };
 
-///	\enum eControlMode
+/// \enum eControlMode
 /// \brief Pump pressure control mode
 enum eControlMode
 {
@@ -67,7 +67,7 @@ enum eControlMode
     kControlMode_Count
 };
 
-///	\enum eTriggerMode
+/// \enum eTriggerMode
 /// \brief Respiration trigger mode
 enum eTriggerMode
 {
@@ -78,15 +78,15 @@ enum eTriggerMode
     kTriggerMode_Count
 };
 
-///	\enum eAlarm
+/// \enum eAlarm
 /// \brief Alarms raised by safeties
 enum eAlarm
 {
-    kAlarm_MaxPressureLimit             = (1<<0),	///> System max pressure reached
-    kAlarm_MinPressureLimit             = (1<<1),	///> System min pressure reached
-    kAlarm_PressureSensorRedudancyFail  = (1<<2),	///> Both pressure sensors report different readings
-    kAlarm_InvalidConfiguration         = (1<<3), 	///> Loaded configuration is invalid
-    kAlarm_BatteryLow                   = (1<<4),	///> Low battery voltage
+    kAlarm_MaxPressureLimit             = (1<<0),   ///> System max pressure reached
+    kAlarm_MinPressureLimit             = (1<<1),   ///> System min pressure reached
+    kAlarm_PressureSensorRedudancyFail  = (1<<2),   ///> Both pressure sensors report different readings
+    kAlarm_InvalidConfiguration         = (1<<3),   ///> Loaded configuration is invalid
+    kAlarm_BatteryLow                   = (1<<4),   ///> Low battery voltage
 };
 
 const float kMPX5010_MaxPressure_mmH2O          = 1019.78f;

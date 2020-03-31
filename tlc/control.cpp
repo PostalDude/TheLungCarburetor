@@ -1,9 +1,9 @@
 ///
-/// \file 		control.cpp
-/// \brief 		The Lung Carburetor Firmware control module
-///				
-/// \author 	Frederic Lauzon
-/// \ingroup 	control
+/// \file       control.cpp
+/// \brief      The Lung Carburetor Firmware control module
+///
+/// \author     Frederic Lauzon
+/// \ingroup    control
 #include "control.h"
 #include "datamodel.h"
 #include "configuration.h"

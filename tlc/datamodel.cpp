@@ -1,9 +1,9 @@
 ///
-/// \file 		datamodel.cpp
-/// \brief 		The Lung Carburetor Firmware datamodel module
-///				
-/// \author 	Frederic Lauzon
-/// \ingroup 	datamodel
+/// \file       datamodel.cpp
+/// \brief      The Lung Carburetor Firmware datamodel module
+///
+/// \author     Frederic Lauzon
+/// \ingroup    datamodel
 #include "datamodel.h"
 
 tDataModel gDataModel;

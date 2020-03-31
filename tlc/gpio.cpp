@@ -1,9 +1,9 @@
 ///
-/// \file 		gpio.cpp
-/// \brief 		The Lung Carburetor Firmware gpio module
-///				
-/// \author 	Frederic Lauzon
-/// \ingroup 	gpio
+/// \file       gpio.cpp
+/// \brief      The Lung Carburetor Firmware gpio module
+///
+/// \author     Frederic Lauzon
+/// \ingroup    gpio
 #include "gpio.h"
 #include "datamodel.h"
 #include "control.h"

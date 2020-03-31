@@ -1,9 +1,9 @@
 ///
-/// \file 		serialportreader.cpp
-/// \brief 		The Lung Carburetor Firmware serialportreader module
-///				
-/// \author 	Adam Galarneau
-/// \ingroup 	serialportreader
+/// \file       serialportreader.cpp
+/// \brief      The Lung Carburetor Firmware serialportreader module
+///
+/// \author     Adam Galarneau
+/// \ingroup    serialportreader
 #include "serialportreader.h"
 
 #include "common.h"
@@ -190,7 +190,7 @@ void updateCurve()
     gDataModel.pExhaleCurve.fSetPoint_mmH2O[0] = gDataModel.fInhalePressureTarget_mmH2O;
     gDataModel.pExhaleCurve.fSetPoint_mmH2O[1] = gDataModel.fExhalePressureTarget_mmH2O;
     gDataModel.pExhaleCurve.fSetPoint_mmH2O[2] = gDataModel.fExhalePressureTarget_mmH2O;
-    
+
     /*********** IMPORTANT NOTE *******************/
     /*
     Depending on how this profile is read to send commands, this could cause the system to output something dangerous. I don't know where the profile is handled in the code.
@@ -220,7 +220,7 @@ bool ParseCommand(uint8_t* pData, uint8_t length)
 {
     // replace the end of the string with 0s so it's compatible with the strcmp function
     uint8_t dataIndex = 0;
-    
+
     // First bytes is the command
     if (length < kCommandSize)
     {
@@ -246,7 +246,7 @@ bool ParseCommand(uint8_t* pData, uint8_t length)
         serialPrint(0.0f); // FIO
         Serial.print(","); serialPrint(0.0f);//serialPrint(gConfiguration.fTakeOverThreshold_ms);
         float breatheRate = static_cast<float>(gDataModel.nRespirationPerMinute);
-        Serial.print(","); serialPrint(breatheRate); 
+        Serial.print(","); serialPrint(breatheRate);
         Serial.print(","); serialPrint(gDataModel.fInhalePressureTarget_mmH2O);
         Serial.print(","); serialPrint(gDataModel.fExhalePressureTarget_mmH2O);
         Serial.print(","); serialPrint(gDataModel.fInhaleRatio);
@@ -269,7 +269,7 @@ bool ParseCommand(uint8_t* pData, uint8_t length)
         Serial.println("ACK");
         break;
 
-    case Commands_Status: 
+    case Commands_Status:
     {
         serialPrint(gDataModel.fPressure_mmH2O[0]);
         Serial.print(","); serialPrint(gDataModel.fPressure_mmH2O[1]);
@@ -286,7 +286,7 @@ bool ParseCommand(uint8_t* pData, uint8_t length)
         (gDataModel.nSafetyFlags & kAlarm_MaxPressureLimit) ? Serial.print(",1") : Serial.print(",0");
         (gDataModel.nSafetyFlags & kAlarm_PressureSensorRedudancyFail) ? Serial.print(",1") : Serial.print(",0");
         (gDataModel.nSafetyFlags & kAlarm_InvalidConfiguration) ? Serial.print(",1") : Serial.print(",0");
-        
+
         Serial.print("\r\n");
     }
     break;
@@ -354,7 +354,7 @@ bool ParseCommand(uint8_t* pData, uint8_t length)
         float exhaleMmH2O = 0.0f;
         float inhaleRatio = 0.0f;
         float exhaleRatio = 0.0f;
-        
+
         bool ok = getValue(pData, dataIndex, length, breatheRate);
         if (ok) ok = getValue(pData, dataIndex, length, inhaleMmH2O);
         if (ok) ok = getValue(pData, dataIndex, length, exhaleMmH2O);
@@ -520,7 +520,7 @@ bool ParseCommand(uint8_t* pData, uint8_t length)
         Serial.println("ACK");
     }
     break;
-    
+
     default:
         Serial.println("NACK");
         break;
