@@ -3,6 +3,7 @@
 #include "common.h"
 #include "configuration.h"
 #include "datamodel.h"
+#include "safeties.h"
 
 namespace
 {
@@ -31,6 +32,12 @@ namespace
         Commands_InitializePressureSensor,
         Commands_InitializePeepValue,
         Commands_InitializeTidalVolume,
+        Commands_AlarmReset,
+        Commands_AlarmEnable,
+        Commands_ConfigSave,
+        Commands_ConfigLoad,
+        Commands_SetGainPID,
+        Commands_SetLimitPID,
         Commands_Count
     };
 
@@ -57,6 +64,12 @@ namespace
         "IPS",
         "IPV",
         "ITV",
+        "ART",
+        "AEN",
+        "CSV",
+        "CLD",
+        "SGP",
+        "SLP",
         "UNK"
     };
 
@@ -159,31 +172,36 @@ namespace
     // printValue("DEBUG: in ratio ", (int)(inhaleRatio*1000.0f));
 }
 
-void updateCurve()
+bool updateCurve()
 {
-    // Updating Data model
-    float breatheTime = 1.0f/gDataModel.nRespirationPerMinute; //TODO: Pass breathe time instead of breathre Rate - or better yet, separate inhale and exhale times
+    if (gDataModel.nRespirationPerMinute > 0)
+    {
+        // Updating Data model
+        float breatheTime = 1.0f/gDataModel.nRespirationPerMinute; //TODO: Pass breathe time instead of breathre Rate - or better yet, separate inhale and exhale times
 
-    //Inhale curve
-    gDataModel.pInhaleCurve.nCount = 3; //Initial point, flex point, end point
-    gDataModel.pInhaleCurve.nSetPoint_TickMs[0] = 0;
-    gDataModel.pInhaleCurve.nSetPoint_TickMs[2] = static_cast<uint32_t>((breatheTime*gDataModel.fInhaleRatio) * 1000); //Assumes inhaleRatio + exhaleRatio = 1
-    gDataModel.pInhaleCurve.nSetPoint_TickMs[1] = gDataModel.pInhaleCurve.nSetPoint_TickMs[2] / 2; //I don't know if it's better to convert or to round.
+        //Inhale curve
+        gDataModel.pInhaleCurve.nCount = 3; //Initial point, flex point, end point
+        gDataModel.pInhaleCurve.nSetPoint_TickMs[0] = 0;
+        gDataModel.pInhaleCurve.nSetPoint_TickMs[2] = static_cast<uint32_t>((breatheTime*gDataModel.fInhaleRatio) * 1000); //Assumes inhaleRatio + exhaleRatio = 1
+        gDataModel.pInhaleCurve.nSetPoint_TickMs[1] = gDataModel.pInhaleCurve.nSetPoint_TickMs[2] / 2; //I don't know if it's better to convert or to round.
 
-    gDataModel.pInhaleCurve.fSetPoint_mmH2O[0] = gDataModel.fExhalePressureTarget_mmH2O;
-    gDataModel.pInhaleCurve.fSetPoint_mmH2O[1] = gDataModel.fInhalePressureTarget_mmH2O;
-    gDataModel.pInhaleCurve.fSetPoint_mmH2O[2] = gDataModel.fInhalePressureTarget_mmH2O;
-    //TODO: Add more intermediary points if curve is not smooth enough
+        gDataModel.pInhaleCurve.fSetPoint_mmH2O[0] = gDataModel.fExhalePressureTarget_mmH2O;
+        gDataModel.pInhaleCurve.fSetPoint_mmH2O[1] = gDataModel.fInhalePressureTarget_mmH2O;
+        gDataModel.pInhaleCurve.fSetPoint_mmH2O[2] = gDataModel.fInhalePressureTarget_mmH2O;
+        //TODO: Add more intermediary points if curve is not smooth enough
 
-    //Exhale curve
-    gDataModel.pExhaleCurve.nCount = 3;
-    gDataModel.pExhaleCurve.nSetPoint_TickMs[0] = 0;
-    gDataModel.pExhaleCurve.nSetPoint_TickMs[2] = static_cast<uint32_t>((breatheTime*gDataModel.fExhaleRatio) * 1000); //Assumes inhaleRatio + exhaleRatio = 1
-    gDataModel.pExhaleCurve.nSetPoint_TickMs[1] = gDataModel.pExhaleCurve.nSetPoint_TickMs[2] / 2; //I don't know if it's better to convert or to round.
+        //Exhale curve
+        gDataModel.pExhaleCurve.nCount = 3;
+        gDataModel.pExhaleCurve.nSetPoint_TickMs[0] = 0;
+        gDataModel.pExhaleCurve.nSetPoint_TickMs[2] = static_cast<uint32_t>((breatheTime*gDataModel.fExhaleRatio) * 1000); //Assumes inhaleRatio + exhaleRatio = 1
+        gDataModel.pExhaleCurve.nSetPoint_TickMs[1] = gDataModel.pExhaleCurve.nSetPoint_TickMs[2] / 2; //I don't know if it's better to convert or to round.
 
-    gDataModel.pExhaleCurve.fSetPoint_mmH2O[0] = gDataModel.fInhalePressureTarget_mmH2O;
-    gDataModel.pExhaleCurve.fSetPoint_mmH2O[1] = gDataModel.fExhalePressureTarget_mmH2O;
-    gDataModel.pExhaleCurve.fSetPoint_mmH2O[2] = gDataModel.fExhalePressureTarget_mmH2O;
+        gDataModel.pExhaleCurve.fSetPoint_mmH2O[0] = gDataModel.fInhalePressureTarget_mmH2O;
+        gDataModel.pExhaleCurve.fSetPoint_mmH2O[1] = gDataModel.fExhalePressureTarget_mmH2O;
+        gDataModel.pExhaleCurve.fSetPoint_mmH2O[2] = gDataModel.fExhalePressureTarget_mmH2O;
+        return true;
+    }
+    return false;
     
     /*********** IMPORTANT NOTE *******************/
     /*
@@ -372,7 +390,7 @@ bool ParseCommand(uint8_t* pData, uint8_t length)
             gDataModel.fExhalePressureTarget_mmH2O = exhaleMmH2O;
             gDataModel.fInhaleRatio             = inhaleRatio;
             gDataModel.fExhaleRatio             = exhaleRatio;
-            updateCurve();
+            ok = updateCurve();
         }
 
         if (ok)
@@ -405,7 +423,7 @@ bool ParseCommand(uint8_t* pData, uint8_t length)
         float temp;
         if (getValue(pData, dataIndex, length, temp))
         {
-            if (temp >= 0.1f) // TODO
+            if (temp >= 0.0f)
             {
                 gConfiguration.fMinBatteryLevel = temp;
                 Serial.println("ACK");
@@ -515,6 +533,78 @@ bool ParseCommand(uint8_t* pData, uint8_t length)
     }
     break;
     
+    case Commands_AlarmReset:
+    {
+        Safeties_Clear();
+        Serial.println("ACK");
+    }
+    break;
+
+    case Commands_AlarmEnable:
+    {
+        uint8_t temp;
+        if (getValue(pData, dataIndex, length, temp))
+        {
+            if (temp == 0)
+            {
+                Safeties_Disable();
+            }
+            else
+            {
+                Safeties_Enable();
+            }
+            Serial.println("ACK");
+        }
+        else
+            Serial.println("NACK");
+    }
+    break;
+
+    case Commands_ConfigSave:
+    {
+        Configuration_Write();
+        Serial.println("ACK");
+    }
+    break;
+
+    case Commands_ConfigLoad:
+    {
+        Configuration_Read();
+        Serial.println("ACK");
+    }
+    break;
+
+    case Commands_SetGainPID:
+    {
+        float* fp;
+        int32_t count;
+        if (getValueArray(pData, dataIndex, length, fp, count) && count == 3)
+        {
+            gConfiguration.fGainP = fp[0];
+            gConfiguration.fGainI = fp[1];
+            gConfiguration.fGainD = fp[2];
+            Serial.println("ACK");
+        }
+        else
+            Serial.println("NACK");
+    }
+    break;
+
+    case Commands_SetLimitPID:
+    {
+        float* fp;
+        int32_t count;
+        if (getValueArray(pData, dataIndex, length, fp, count) && count == 2)
+        {
+            gConfiguration.fILimit = fp[0];
+            gConfiguration.fPILimit= fp[1];
+            Serial.println("ACK");
+        }
+        else
+            Serial.println("NACK");
+    }
+    break;
+
     default:
         Serial.println("NACK");
         break;
