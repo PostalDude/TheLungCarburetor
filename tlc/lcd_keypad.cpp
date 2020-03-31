@@ -1,3 +1,9 @@
+///
+/// \file 		lcd_keypad.cpp
+/// \brief 		The Lung Carburetor Firmware lcd and keypad module
+///				
+/// \author 	Sylvain Brisebois
+/// \ingroup 	lcdkeypad
 #include "common.h"
 #include "lcd_keypad.h"
 

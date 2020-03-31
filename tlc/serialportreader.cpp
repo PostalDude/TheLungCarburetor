@@ -1,3 +1,9 @@
+///
+/// \file 		serialportreader.cpp
+/// \brief 		The Lung Carburetor Firmware serialportreader module
+///				
+/// \author 	Adam Galarneau
+/// \ingroup 	serialportreader
 #include "serialportreader.h"
 
 #include "common.h"
