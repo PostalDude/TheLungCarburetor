@@ -9,6 +9,7 @@
 #include "common.h"
 #include "configuration.h"
 #include "datamodel.h"
+#include "safeties.h"
 
 namespace
 {
@@ -157,19 +158,28 @@ namespace
     }
 
     // DEBUG function
+    #if 0
     void printValue(const char* str, int f)
     {
         itoa(f, gParseBuffer, 10);
         Serial.print(str); Serial.println(gParseBuffer);
     }
+    #endif
     // printValue("DEBUG: in ratio ", (int)(inhaleRatio*1000.0f));
 }
 
 void updateCurve()
 {
+	if (gDataModel.nRespirationPerMinute == 0)
+	{
+		gSafeties.bConfigurationInvalid = true;
+		return;
+	}
+
+	
     // Updating Data model
     float breatheTime = 1.0f/gDataModel.nRespirationPerMinute; //TODO: Pass breathe time instead of breathre Rate - or better yet, separate inhale and exhale times
-
+	
     //Inhale curve
     gDataModel.pInhaleCurve.nCount = 3; //Initial point, flex point, end point
     gDataModel.pInhaleCurve.nSetPoint_TickMs[0] = 0;

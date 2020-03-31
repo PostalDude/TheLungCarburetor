@@ -21,6 +21,7 @@ extern tSafeties gSafeties;
 
 /// \fn bool Safeties_Init()
 /// \brief Initialize safeties module
+bool Safeties_Init();
 
 /// \fn bool Safeties_Clear()
 /// \brief Clear alarms
