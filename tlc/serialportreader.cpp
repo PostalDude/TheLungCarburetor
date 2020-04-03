@@ -18,6 +18,7 @@ namespace
     {
         Commands_Unknown = 0,
         Commands_Configs,
+        Commands_ConfigsSetDefault,
         Commands_Status,
         Commands_Alive,
         Commands_Trigger,
@@ -50,6 +51,7 @@ namespace
     const char* CommandsData[] = {
         "UNK",
         "CFG",
+        "RCG",
         "STA",
         "ALI",
         "TRI",
@@ -210,6 +212,7 @@ bool updateCurve()
         return true;
     }
 
+    Serial.println("DEBUG: Curve is invalid.");
     gSafeties.bConfigurationInvalid = true;
     
     return false;
@@ -287,6 +290,13 @@ bool ParseCommand(uint8_t* pData, uint8_t length)
         Serial.print("\r\n");
     }
     break;
+
+    case Commands_ConfigsSetDefault:
+    {
+        Configuration_SetDefaults();
+        Serial.println("ACK");
+        break;
+    }
 
     case Commands_Alive:
         Serial.println("ACK");

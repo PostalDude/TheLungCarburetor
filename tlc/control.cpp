@@ -95,6 +95,7 @@ static bool CheckTrigger()
 
     default:
         // Invalid setting
+        Serial.println("DEBUG: Invalid trigger mode.");
         gSafeties.bConfigurationInvalid = true;
         gDataModel.nPWMPump             = 0;
         return false;
@@ -281,6 +282,7 @@ static bool ComputeRespirationSetPoint()
     default:
         sprintf(gLcdDetail, "N/A   ");
         // Invalid setting
+        Serial.println("DEBUG: unknown cycle mode.");
         gSafeties.bConfigurationInvalid = true;
         gDataModel.nPWMPump             = 0;
         gDataModel.nCycleState          = kCycleState_WaitTrigger;
@@ -319,6 +321,7 @@ void Control_Process()
 
     default:
         // Unknown control mode, raise error.
+        Serial.println("DEBUG: Unknown control mode.");
         gSafeties.bConfigurationInvalid = true;
         gDataModel.nPWMPump             = 0;
         break;

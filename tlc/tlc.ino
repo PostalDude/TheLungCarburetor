@@ -42,6 +42,7 @@ void setup()
     {
         gSafeties.bEnabled              = true;
         gSafeties.bConfigurationInvalid = true; 
+        Serial.println("DEBUG: loading failed.");
     }
         
     gDataModel.nState   = kState_Warmup;
