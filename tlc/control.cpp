@@ -12,14 +12,17 @@
 #include "lcd_keypad.h"
 
 ServoTimer2 exhaleValveServo;
+ServoTimer2 pumpServo;
 
 bool Control_Init()
 {
     gDataModel.nTickRespiration = millis(); // Respiration cycle start tick. Used to compute respiration per minutes
     exhaleValveServo.write(gConfiguration.nServoExhaleOpenAngle);
 
-    Timer1.initialize(4000);         // initialize timer1, and set a 4000us period
-    Timer1.pwm(PIN_OUT_PUMP1_PWM, 0);                // setup pwm on pin 9, 50% duty cycle  ( 0 to 1000)
+    pumpServo.write(750);  // DE 750 a 2250
+    
+    //Timer1.initialize(4000);         // initialize timer1, and set a 4000us period
+    //Timer1.pwm(PIN_OUT_PUMP1_PWM, 0);                // setup pwm on pin 9, 50% duty cycle  ( 0 to 1000)
 
     gDataModel.bStartFlag = false;
 
@@ -294,7 +297,8 @@ void Control_Process()
         gDataModel.nCycleState = kCycleState_WaitTrigger;
         exhaleValveServo.write(gConfiguration.nServoExhaleOpenAngle);
         gDataModel.nTickRespiration = millis(); // Respiration cycle start tick. Used to compute
-        Timer1.pwm(PIN_OUT_PUMP1_PWM, gDataModel.nPWMPump);
+        //Timer1.pwm(PIN_OUT_PUMP1_PWM, gDataModel.nPWMPump);
+        pumpServo.write((gDataModel.nPWMPump * 1.5) + 750);  //conversion d'un signal de 0 a 1000 vers  750 a 2250
         return;
     }
 
@@ -321,5 +325,6 @@ void Control_Process()
     };
 
     // Pump power to output
-    Timer1.pwm(PIN_OUT_PUMP1_PWM, gDataModel.nPWMPump);
+    //Timer1.pwm(PIN_OUT_PUMP1_PWM, gDataModel.nPWMPump);
+    pumpServo.write((gDataModel.nPWMPump * 1.5) + 750);  //conversion d'un signal de 0 a 1000 vers  750 a 2250
 }

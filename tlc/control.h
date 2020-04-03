@@ -10,6 +10,7 @@
 #include "common.h"
 #include <ServoTimer2.h>
 extern ServoTimer2 exhaleValveServo;
+extern ServoTimer2 pumpServo;
 
 /// \fn bool Control_Init()
 /// \brief Initialize control
