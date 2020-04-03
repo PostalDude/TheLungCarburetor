@@ -73,11 +73,11 @@ void Sensors_Process()
 
     gDataModel.fPressure_mmH2O[1] = mmH2O;
 
-
+#ifdef ENABLE_LCD
     char szPressure[6];
     // 4 is mininum width, 2 is precision; float value is copied onto str_temp
     dtostrf(gDataModel.fPressure_mmH2O[0], 4, 2, szPressure);
     sprintf(gLcdMsg,"mmH2O:%s", szPressure);
-
+#endif
     gDataModel.fBatteryLevel = (float)analogRead(PIN_BATTERY) * (1.0f/1024.0f) * (kBatteryLevelGain * 5.0f);
 }

@@ -6,6 +6,13 @@
 #ifndef TLC_DEFS_H
 #define TLC_DEFS_H
 
+// Enable flag for the LCD
+#undef ENABLE_LCD
+
+// Enable flag for debug message
+#undef PRINT_DEBUG_TO_SERIAL
+
+
 // Force error check at compile time for constants
 #define HXCOMPILATIONASSERT(name, x) typedef char name[x ? 1 : -1]
 

@@ -220,7 +220,9 @@ static bool ComputeRespirationSetPoint()
     switch (gDataModel.nCycleState)
     {
     case kCycleState_WaitTrigger:
+#ifdef ENABLE_LCD
         sprintf(gLcdDetail, "Trigger   ");
+#endif
         if (CheckTrigger())
         {
             BeginRespirationCycle();
@@ -238,7 +240,9 @@ static bool ComputeRespirationSetPoint()
 
     case kCycleState_Inhale:
         {
+#ifdef ENABLE_LCD
             sprintf(gLcdDetail, "Inhale  ");
+#endif
             bool inhaleFinished = Inhale();
             if (inhaleFinished)
             {
@@ -258,7 +262,9 @@ static bool ComputeRespirationSetPoint()
 
     case kCycleState_Exhale:
         {
+#ifdef ENABLE_LCD
             sprintf(gLcdDetail, "Exhale   ");
+#endif
             bool exhaleFinished = Exhale();
             if (exhaleFinished)
             {
@@ -271,7 +277,9 @@ static bool ComputeRespirationSetPoint()
         break;
 
     case kCycleState_Stabilization:
+#ifdef ENABLE_LCD
         sprintf(gLcdDetail, "Stabil   ");
+#endif
         // Pressure Stabilization between cycles
         if ((millis() - gDataModel.nTickStabilization) >= kPeriodStabilization)
         {
@@ -280,7 +288,9 @@ static bool ComputeRespirationSetPoint()
         break;
 
     default:
+#ifdef ENABLE_LCD
         sprintf(gLcdDetail, "N/A   ");
+#endif
         // Invalid setting
         Serial.println("DEBUG: unknown cycle mode.");
         gSafeties.bConfigurationInvalid = true;

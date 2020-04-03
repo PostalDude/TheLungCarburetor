@@ -7,6 +7,8 @@
 #include "common.h"
 #include "lcd_keypad.h"
 
+#ifdef ENABLE_LCD
+
 #include <Adafruit_RGBLCDShield.h>
 
 // The shield uses the I2C SCL and SDA pins. On classic Arduinos
@@ -81,3 +83,5 @@ void LcdKeypad_Process()
         }
     }
 }
+
+#endif

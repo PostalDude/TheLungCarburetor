@@ -23,14 +23,17 @@ bool Configuration_Init()
     bool bValid = Configuration_Read();
     if (!bValid)
     {
+#ifdef ENABLE_LCD
         sprintf(gLcdMsg, "NVM Fail");
+#endif
         Configuration_SetDefaults();
         Configuration_Write();
     }
     else
     {
+#ifdef ENABLE_LCD
         sprintf(gLcdMsg, "NVM Success");
-
+#endif
     }
 #endif
 

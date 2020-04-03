@@ -7,8 +7,12 @@
 #ifndef TLC_LCD_KEYPAD_H
 #define TLC_LCD_KEYPAD_H
 
+#ifdef ENABLE_LCD
+
 extern char gLcdMsg[128];
 extern char gLcdDetail[128];
+
+#endif
 
 /// \fn bool LcdKeypad_Init()
 /// \brief Initialize lcd and keypad
