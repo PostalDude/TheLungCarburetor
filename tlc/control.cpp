@@ -21,9 +21,6 @@ bool Control_Init()
 
     pumpServo.write(750);  // DE 750 a 2250
     
-    //Timer1.initialize(4000);         // initialize timer1, and set a 4000us period
-    //Timer1.pwm(PIN_OUT_PUMP1_PWM, 0);                // setup pwm on pin 9, 50% duty cycle  ( 0 to 1000)
-
     gDataModel.bStartFlag = false;
 
     return true;
@@ -63,7 +60,7 @@ void Control_PID()
         gDataModel.fPI = 0;
     }
 
-    gDataModel.nPWMPump = (uint16_t)(gDataModel.fPI * gConfiguration.fControlTransfer);
+    gDataModel.fPWMPump = gDataModel.fPI * gConfiguration.fControlTransfer;
 }
 
 // Return true when condition for respiration has been triggered
@@ -97,7 +94,7 @@ static bool CheckTrigger()
         // Invalid setting
         Serial.println("DEBUG: Invalid trigger mode.");
         gSafeties.bConfigurationInvalid = true;
-        gDataModel.nPWMPump             = 0;
+        gDataModel.fPWMPump             = 0;
         return false;
     };
 
@@ -294,7 +291,7 @@ static bool ComputeRespirationSetPoint()
         // Invalid setting
         Serial.println("DEBUG: unknown cycle mode.");
         gSafeties.bConfigurationInvalid = true;
-        gDataModel.nPWMPump             = 0;
+        gDataModel.fPWMPump             = 0;
         gDataModel.nCycleState          = kCycleState_WaitTrigger;
         return false;
     };
@@ -309,8 +306,10 @@ void Control_Process()
         gDataModel.nCycleState = kCycleState_WaitTrigger;
         exhaleValveServo.write(gConfiguration.nServoExhaleOpenAngle);
         gDataModel.nTickRespiration = millis(); // Respiration cycle start tick. Used to compute
-        //Timer1.pwm(PIN_OUT_PUMP1_PWM, gDataModel.nPWMPump);
-        pumpServo.write((gDataModel.nPWMPump * 1.5) + 750);  //conversion d'un signal de 0 a 1000 vers  750 a 2250
+    
+        float servoValue = (gDataModel.fPWMPump * 1.5) + 750; //conversion d'un signal de 0 a 1000 vers  750 a 2250
+        pumpServo.write((uint16_t)(servoValue));
+        
         return;
     }
 
@@ -326,18 +325,18 @@ void Control_Process()
         break;
 
     case kControlMode_FeedForward:
-        // In feedforward, the master controls the gDataModel.nPWMPump value through the serial port
+        // In feedforward, the master controls the gDataModel.fPWMPump value through the serial port
         break;
 
     default:
         // Unknown control mode, raise error.
         Serial.println("DEBUG: Unknown control mode.");
         gSafeties.bConfigurationInvalid = true;
-        gDataModel.nPWMPump             = 0;
+        gDataModel.fPWMPump             = 0;
         break;
     };
 
     // Pump power to output
-    //Timer1.pwm(PIN_OUT_PUMP1_PWM, gDataModel.nPWMPump);
-    pumpServo.write((gDataModel.nPWMPump * 1.5) + 750);  //conversion d'un signal de 0 a 1000 vers  750 a 2250
+    float servoValue = (gDataModel.fPWMPump * 1.5) + 750; //conversion d'un signal de 0 a 1000 vers  750 a 2250
+    pumpServo.write((uint16_t)(servoValue));
 }

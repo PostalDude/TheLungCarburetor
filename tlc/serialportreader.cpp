@@ -308,7 +308,7 @@ bool ParseCommand(uint8_t* pData, uint8_t length)
         Serial.print(","); serialPrint(gDataModel.fPressure_mmH2O[1]);
         Serial.print(","); serialPrint(gDataModel.fRequestPressure_mmH2O);
         Serial.print(","); serialPrint(gDataModel.fBatteryLevel);
-        Serial.print(","); serialPrint(static_cast<int>(gDataModel.nPWMPump));
+        Serial.print(","); serialPrint(gDataModel.fPWMPump);
         Serial.print(","); serialPrint(static_cast<int>(gDataModel.nState));
         Serial.print(","); serialPrint(static_cast<int>(gDataModel.nControlMode));
         Serial.print(","); serialPrint(static_cast<int>(gDataModel.nTriggerMode));
