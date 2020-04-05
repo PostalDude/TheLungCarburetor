@@ -6,6 +6,13 @@
 #ifndef TLC_DEFS_H
 #define TLC_DEFS_H
 
+// Enable flag for the LCD
+#undef ENABLE_LCD
+
+// Enable flag for debug message
+#undef PRINT_DEBUG_TO_SERIAL
+
+
 // Force error check at compile time for constants
 #define HXCOMPILATIONASSERT(name, x) typedef char name[x ? 1 : -1]
 
@@ -90,10 +97,10 @@ enum eAlarm
 };
 
 const float kMPX5010_MaxPressure_mmH2O          = 1019.78f;
-const float kMPX5010_MaxPressureDelta_mmH2O     = 40.0f;
+const float kMPX5010_MaxPressureDelta_mmH2O     = 90.0f;
 const float kMPX5010_Accuracy                   = 0.5f;
 const float kMPX5010_Sensitivity_mV_mmH2O       = 4.413f;
-const float kBatteryLevelGain                   = 3.0f;
+const float kBatteryLevelGain                   = 5.0f;
 
 #define PIN_SERIAL_RX           0       // Serial port RX
 #define PIN_SERIAL_TX           1       // Serial port TX

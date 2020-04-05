@@ -5,6 +5,7 @@
 /// \author 	Frederic Lauzon
 /// \defgroup 	main Main program
 
+
 #include "common.h"
 #include "safeties.h"
 #include "communications.h"
@@ -33,7 +34,9 @@ void setup()
 
     Safeties_Init();
 
+#ifdef ENABLE_LCD
     LcdKeypad_Init();
+#endif
         
     bool cfgSuccess = Configuration_Init();
     
@@ -42,6 +45,7 @@ void setup()
     {
         gSafeties.bEnabled              = true;
         gSafeties.bConfigurationInvalid = true; 
+        Serial.println("DEBUG: loading failed.");
     }
         
     gDataModel.nState   = kState_Warmup;
@@ -115,11 +119,13 @@ void loop()
 		Control_Process();        
     }
 
+#ifdef ENABLE_LCD
     if ((millis() - gDataModel.nTickLcdKeypad) >= kPeriodLcdKeypad)
     {
         gDataModel.nTickLcdKeypad = millis();
 		LcdKeypad_Process();
     }
+#endif
     
     Safeties_Process();
 }

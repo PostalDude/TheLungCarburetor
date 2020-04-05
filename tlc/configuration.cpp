@@ -23,14 +23,17 @@ bool Configuration_Init()
     bool bValid = Configuration_Read();
     if (!bValid)
     {
+#ifdef ENABLE_LCD
         sprintf(gLcdMsg, "NVM Fail");
+#endif
         Configuration_SetDefaults();
         Configuration_Write();
     }
     else
     {
+#ifdef ENABLE_LCD
         sprintf(gLcdMsg, "NVM Success");
-
+#endif
     }
 #endif
 
@@ -65,21 +68,21 @@ static uint32_t CRC32(uint8_t* pBuffer, int len)
 bool Configuration_SetDefaults()
 {
     gConfiguration.nVersion                 = kEEPROM_Version;
-    gConfiguration.fMinBatteryLevel         = 10.0f;
+    gConfiguration.fMinBatteryLevel         = 11.0f;
     gConfiguration.nPressureSensorOffset[0] = 0;
     gConfiguration.nPressureSensorOffset[1] = 0;
     gConfiguration.fMaxPressureLimit_mmH2O  = kMPX5010_MaxPressure_mmH2O;
     gConfiguration.fMinPressureLimit_mmH2O  = -kMPX5010_MaxPressure_mmH2O;
     gConfiguration.fMaxPressureDelta_mmH2O  = kMPX5010_MaxPressureDelta_mmH2O;
-    gConfiguration.fGainP                   = 250.5f;
-    gConfiguration.fGainI                   = 0.01f;
+    gConfiguration.fGainP                   = 17.5f;
+    gConfiguration.fGainI                   = 0.001f;
     gConfiguration.fGainD                   = 0.0000f;
     gConfiguration.fILimit                  = 5.0f;
-    gConfiguration.fPILimit                 = 1000.0f;
-    gConfiguration.fControlTransfer         = 1.0f;
+    gConfiguration.fPILimit                 = 700.0f;
+    gConfiguration.fControlTransfer         = 1.5f;
     gConfiguration.fPatientTrigger_mmH2O    = 40.0f;
-    gConfiguration.nServoExhaleOpenAngle    = 2270;
-    gConfiguration.nServoExhaleCloseAngle   = 750;
+    gConfiguration.nServoExhaleOpenAngle    = 2400;
+    gConfiguration.nServoExhaleCloseAngle   = 1500;
     gConfiguration.nCRC                     = 0; // Clear CRC for computation
 
     return true;

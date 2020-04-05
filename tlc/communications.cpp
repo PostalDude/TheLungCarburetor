@@ -92,15 +92,5 @@ void Communications_Process()
             gRxBuffer.rxSize = count;
             gRxBuffer.lastRxTick = millis();
         }
-
-        #define PRINT_DEBUG_TO_SERIAL 0
-        #ifdef PRINT_DEBUG_TO_SERIAL
-        // Print the lcd details on the serial since not everyone has one!
-        if (strlen(gLcdDetail) > 0)
-        {
-            Serial.print("DEBUG:");
-            Serial.println(gLcdDetail);
-        }
-        #endif
     }
 }

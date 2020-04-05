@@ -12,14 +12,14 @@
 #include "lcd_keypad.h"
 
 ServoTimer2 exhaleValveServo;
+ServoTimer2 pumpServo;
 
 bool Control_Init()
 {
     gDataModel.nTickRespiration = millis(); // Respiration cycle start tick. Used to compute respiration per minutes
     exhaleValveServo.write(gConfiguration.nServoExhaleOpenAngle);
 
-    Timer1.initialize(4000);         // initialize timer1, and set a 4000us period
-    Timer1.pwm(PIN_OUT_PUMP1_PWM, 0);                // setup pwm on pin 9, 50% duty cycle  ( 0 to 1000)
+    pumpServo.write(750);  // DE 750 a 2250
 
     gDataModel.bStartFlag = false;
 
@@ -92,6 +92,7 @@ static bool CheckTrigger()
 
     default:
         // Invalid setting
+        Serial.println("DEBUG: Invalid trigger mode.");
         gSafeties.bConfigurationInvalid = true;
         gDataModel.nPWMPump             = 0;
         return false;
@@ -216,7 +217,9 @@ static bool ComputeRespirationSetPoint()
     switch (gDataModel.nCycleState)
     {
     case kCycleState_WaitTrigger:
+#ifdef ENABLE_LCD
         sprintf(gLcdDetail, "Trigger   ");
+#endif
         if (CheckTrigger())
         {
             BeginRespirationCycle();
@@ -234,7 +237,9 @@ static bool ComputeRespirationSetPoint()
 
     case kCycleState_Inhale:
         {
+#ifdef ENABLE_LCD
             sprintf(gLcdDetail, "Inhale  ");
+#endif
             bool inhaleFinished = Inhale();
             if (inhaleFinished)
             {
@@ -254,7 +259,9 @@ static bool ComputeRespirationSetPoint()
 
     case kCycleState_Exhale:
         {
+#ifdef ENABLE_LCD
             sprintf(gLcdDetail, "Exhale   ");
+#endif
             bool exhaleFinished = Exhale();
             if (exhaleFinished)
             {
@@ -267,7 +274,9 @@ static bool ComputeRespirationSetPoint()
         break;
 
     case kCycleState_Stabilization:
+#ifdef ENABLE_LCD
         sprintf(gLcdDetail, "Stabil   ");
+#endif
         // Pressure Stabilization between cycles
         if ((millis() - gDataModel.nTickStabilization) >= kPeriodStabilization)
         {
@@ -276,8 +285,11 @@ static bool ComputeRespirationSetPoint()
         break;
 
     default:
+#ifdef ENABLE_LCD
         sprintf(gLcdDetail, "N/A   ");
+#endif
         // Invalid setting
+        Serial.println("DEBUG: unknown cycle mode.");
         gSafeties.bConfigurationInvalid = true;
         gDataModel.nPWMPump             = 0;
         gDataModel.nCycleState          = kCycleState_WaitTrigger;
@@ -294,7 +306,8 @@ void Control_Process()
         gDataModel.nCycleState = kCycleState_WaitTrigger;
         exhaleValveServo.write(gConfiguration.nServoExhaleOpenAngle);
         gDataModel.nTickRespiration = millis(); // Respiration cycle start tick. Used to compute
-        Timer1.pwm(PIN_OUT_PUMP1_PWM, gDataModel.nPWMPump);
+
+        pumpServo.write(750);
         return;
     }
 
@@ -315,11 +328,17 @@ void Control_Process()
 
     default:
         // Unknown control mode, raise error.
+        Serial.println("DEBUG: Unknown control mode.");
         gSafeties.bConfigurationInvalid = true;
         gDataModel.nPWMPump             = 0;
         break;
     };
 
     // Pump power to output
-    Timer1.pwm(PIN_OUT_PUMP1_PWM, gDataModel.nPWMPump);
+    uint16_t pwm = gDataModel.nPWMPump + 750;
+    if (pwm > 2250)
+    {
+      pwm = 2250;
+    }
+    pumpServo.write(pwm);  //conversion d'un signal de 0 a 1000 vers  750 a 2250
 }

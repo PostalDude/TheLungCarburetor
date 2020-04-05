@@ -18,6 +18,7 @@ namespace
     {
         Commands_Unknown = 0,
         Commands_Configs,
+        Commands_ConfigsSetDefault,
         Commands_Status,
         Commands_Alive,
         Commands_Trigger,
@@ -50,6 +51,7 @@ namespace
     const char* CommandsData[] = {
         "UNK",
         "CFG",
+        "RCG",
         "STA",
         "ALI",
         "TRI",
@@ -182,38 +184,38 @@ namespace
 
 bool updateCurve()
 {
-    if (gDataModel.nRespirationPerMinute > 0)
+    if (gDataModel.nRespirationPerMinute > 0 && gDataModel.fExhaleRatio > 0.0f)
     {
         // Updating Data model
-        float breatheTime = 1.0f/gDataModel.nRespirationPerMinute; //TODO: Pass breathe time instead of breathre Rate - or better yet, separate inhale and exhale times
+        float breatheTime = 60.0f / gDataModel.nRespirationPerMinute; //TODO: Pass breathe time instead of breathre Rate - or better yet, separate inhale and exhale times
+        float fInhaleTime = breatheTime * (gDataModel.fInhaleRatio/(gDataModel.fInhaleRatio + gDataModel.fExhaleRatio)); // 1 : 5
+        float fExhaleTime = breatheTime * (gDataModel.fExhaleRatio/(gDataModel.fInhaleRatio + gDataModel.fExhaleRatio));
 
         //Inhale curve
-        gDataModel.pInhaleCurve.nCount = 3; //Initial point, flex point, end point
-        gDataModel.pInhaleCurve.nSetPoint_TickMs[0] = 0;
-        gDataModel.pInhaleCurve.nSetPoint_TickMs[2] = static_cast<uint32_t>((breatheTime*gDataModel.fInhaleRatio) * 1000); //Assumes inhaleRatio + exhaleRatio = 1
-        gDataModel.pInhaleCurve.nSetPoint_TickMs[1] = gDataModel.pInhaleCurve.nSetPoint_TickMs[2] / 2; //I don't know if it's better to convert or to round.
+        uint16_t nPointTickMs = (uint16_t)((fInhaleTime * 1000.0f) / (float)kMaxCurveCount);
+        gDataModel.pInhaleCurve.nCount = kMaxCurveCount; //Initial point, flex point, end point
+        for (int a = 0; a < gDataModel.pInhaleCurve.nCount; ++a)
+        {
+            gDataModel.pInhaleCurve.fSetPoint_mmH2O[a] = gDataModel.fInhalePressureTarget_mmH2O;
+            gDataModel.pInhaleCurve.nSetPoint_TickMs[a] = nPointTickMs;
+        }
 
-        gDataModel.pInhaleCurve.fSetPoint_mmH2O[0] = gDataModel.fExhalePressureTarget_mmH2O;
-        gDataModel.pInhaleCurve.fSetPoint_mmH2O[1] = gDataModel.fInhalePressureTarget_mmH2O;
-        gDataModel.pInhaleCurve.fSetPoint_mmH2O[2] = gDataModel.fInhalePressureTarget_mmH2O;
-        //TODO: Add more intermediary points if curve is not smooth enough
+        nPointTickMs = (uint16_t)((fExhaleTime * 1000.0f) / (float)kMaxCurveCount);
+        gDataModel.pExhaleCurve.nCount = kMaxCurveCount;
+        for (int a = 0; a < gDataModel.pExhaleCurve.nCount; ++a)
+        {
+            gDataModel.pExhaleCurve.fSetPoint_mmH2O[a] = gDataModel.fExhalePressureTarget_mmH2O;
+            gDataModel.pExhaleCurve.nSetPoint_TickMs[a] = nPointTickMs;
+        }
 
-        //Exhale curve
-        gDataModel.pExhaleCurve.nCount = 3;
-        gDataModel.pExhaleCurve.nSetPoint_TickMs[0] = 0;
-        gDataModel.pExhaleCurve.nSetPoint_TickMs[2] = static_cast<uint32_t>((breatheTime*gDataModel.fExhaleRatio) * 1000); //Assumes inhaleRatio + exhaleRatio = 1
-        gDataModel.pExhaleCurve.nSetPoint_TickMs[1] = gDataModel.pExhaleCurve.nSetPoint_TickMs[2] / 2; //I don't know if it's better to convert or to round.
-
-        gDataModel.pExhaleCurve.fSetPoint_mmH2O[0] = gDataModel.fInhalePressureTarget_mmH2O;
-        gDataModel.pExhaleCurve.fSetPoint_mmH2O[1] = gDataModel.fExhalePressureTarget_mmH2O;
-        gDataModel.pExhaleCurve.fSetPoint_mmH2O[2] = gDataModel.fExhalePressureTarget_mmH2O;
         return true;
     }
 
+    Serial.println("DEBUG: Curve is invalid.");
     gSafeties.bConfigurationInvalid = true;
-    
+
     return false;
-    
+
     /*********** IMPORTANT NOTE *******************/
     /*
     Depending on how this profile is read to send commands, this could cause the system to output something dangerous. I don't know where the profile is handled in the code.
@@ -288,6 +290,13 @@ bool ParseCommand(uint8_t* pData, uint8_t length)
     }
     break;
 
+    case Commands_ConfigsSetDefault:
+    {
+        Configuration_SetDefaults();
+        Serial.println("ACK");
+        break;
+    }
+
     case Commands_Alive:
         Serial.println("ACK");
         break;
@@ -309,6 +318,7 @@ bool ParseCommand(uint8_t* pData, uint8_t length)
         (gDataModel.nSafetyFlags & kAlarm_MaxPressureLimit) ? Serial.print(",1") : Serial.print(",0");
         (gDataModel.nSafetyFlags & kAlarm_PressureSensorRedudancyFail) ? Serial.print(",1") : Serial.print(",0");
         (gDataModel.nSafetyFlags & kAlarm_InvalidConfiguration) ? Serial.print(",1") : Serial.print(",0");
+        (gDataModel.nSafetyFlags & kAlarm_BatteryLow) ? Serial.print(",1") : Serial.print(",0");
 
         Serial.print("\r\n");
     }
@@ -387,8 +397,8 @@ bool ParseCommand(uint8_t* pData, uint8_t length)
         if (ok)
         {
             ok = (
-                inhaleMmH2O >= 0.0f && inhaleMmH2O <= 40.0f &&
-                exhaleMmH2O >= 0.0f && exhaleMmH2O <= 25.0f &&
+                inhaleMmH2O >= 0.0f && inhaleMmH2O <= 400.0f &&
+                exhaleMmH2O >= 0.0f && exhaleMmH2O <= 250.0f &&
                 inhaleRatio >= 0.0f && exhaleRatio >= 0.0f &&
                 breatheRate >= 6.0f && breatheRate <= 40.0f
             );
@@ -543,7 +553,7 @@ bool ParseCommand(uint8_t* pData, uint8_t length)
         Serial.println("ACK");
     }
     break;
-    
+
     case Commands_AlarmReset:
     {
         Safeties_Clear();
